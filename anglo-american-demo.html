@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anglo American - Risk Intelligence Demo</title>
+  <style>
+    :root {
+      --navy: #1a1a2e;
+      --red: #C8102E;
+      --amber: #f59e0b;
+      --green: #16a34a;
+      --gray: #6b7280;
+      --ink: #111827;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --soft: #f7f7f9;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #fff; color: var(--ink); }
+    h1, h2, h3, h4, p { margin: 0; }
+    button, a { font: inherit; }
+    .topbar { position: sticky; top: 0; z-index: 20; background: rgba(26,26,46,0.96); color: white; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .topbar-inner { max-width: 1200px; margin: 0 auto; min-height: 64px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 900; letter-spacing: -0.02em; white-space: nowrap; }
+    .brand-mark { width: 34px; height: 34px; border-radius: 9px; background: var(--red); display: grid; place-items: center; font-weight: 900; color: white; font-size: 13px; }
+    .nav { display: flex; align-items: center; gap: 20px; }
+    .nav-link { position: relative; display: inline-flex; align-items: center; gap: 7px; padding: 9px 13px; border-radius: 999px; color: rgba(255,255,255,0.66); text-decoration: none; font-size: 12px; font-weight: 800; cursor: pointer; }
+    .nav-link:not(:last-child)::after { content: "->"; position: absolute; right: -19px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.28); font-weight: 800; pointer-events: none; }
+    .nav-link.active { background: var(--red); color: white; z-index: 1; }
+    .nav-num { width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); display: inline-grid; place-items: center; font-size: 10px; }
+    .page { display: none; min-height: calc(100vh - 64px); }
+    .page.active { display: block; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .hero { background: radial-gradient(circle at 80% 20%, rgba(200,16,46,0.32), transparent 32%), linear-gradient(135deg, #111827, var(--navy)); color: white; padding: 76px 0 70px; }
+    .tag { display: inline-flex; align-items: center; gap: 8px; color: rgba(255,255,255,0.72); font-size: 12px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 18px; }
+    .tag-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); }
+    .hero h1 { max-width: 940px; font-size: clamp(34px, 5vw, 64px); line-height: 0.98; letter-spacing: -0.055em; font-weight: 950; }
+    .hero h1 span { color: rgba(255,255,255,0.72); font-weight: 700; }
+    .hero p { max-width: 760px; margin-top: 22px; color: rgba(255,255,255,0.72); font-size: 18px; line-height: 1.65; }
+    section { padding: 58px 0; }
+    .section-head { margin-bottom: 30px; }
+    .eyebrow { color: var(--red); font-size: 11px; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+    .section-title { font-size: clamp(26px, 3vw, 38px); line-height: 1.05; letter-spacing: -0.04em; font-weight: 950; color: var(--ink); }
+    .section-sub { max-width: 720px; margin-top: 10px; color: var(--muted); font-size: 15px; line-height: 1.6; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+    .card { background: white; border: 1px solid var(--line); border-radius: 8px; padding: 24px; box-shadow: 0 1px 2px rgba(17,24,39,0.04); }
+    .dark-card { background: var(--navy); color: white; border-color: rgba(255,255,255,0.1); }
+    .chip { display: inline-flex; align-items: center; border-radius: 999px; padding: 5px 10px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+    .chip-red { background: rgba(200,16,46,0.1); color: var(--red); }
+    .chip-amber { background: rgba(245,158,11,0.13); color: #b45309; }
+    .chip-gray { background: rgba(107,114,128,0.12); color: var(--gray); }
+    .chip-green { background: rgba(22,163,74,0.1); color: var(--green); }
+    .chip-discuss { background: rgba(200,16,46,0.1); color: var(--red); }
+    .chip-monitor { background: rgba(245,158,11,0.13); color: #b45309; }
+    .chip-hold { background: rgba(22,163,74,0.1); color: var(--green); }
+    .chip-rising { background: rgba(200,16,46,0.1); color: var(--red); }
+    .chip-stable { background: rgba(107,114,128,0.12); color: var(--gray); }
+    .story-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+    .card h3 { font-size: 18px; line-height: 1.2; letter-spacing: -0.02em; font-weight: 900; margin-bottom: 8px; }
+    .card p, .card li { color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .divider-note { margin-top: 16px; padding-top: 16px; border-top: 1px solid #f1f2f4; }
+    .divider-note strong { display: block; color: var(--ink); font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 6px; }
+    .source-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+    .source-title { margin-top: 16px; color: var(--ink); font-size: 11px; font-weight: 950; letter-spacing: 0.07em; text-transform: uppercase; }
+    .source-title + .source-row { margin-top: 8px; }
+    .source-stat { background: #f9fafb; border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+    .source-stat strong { display: block; color: var(--ink); font-size: 20px; line-height: 1; font-weight: 950; letter-spacing: -0.04em; margin-bottom: 4px; }
+    .source-stat span { display: block; color: var(--muted); font-size: 10px; font-weight: 850; text-transform: uppercase; letter-spacing: 0.06em; }
+    .source-list { margin-top: 12px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .operate { background: var(--navy); color: white; padding: 42px 0; }
+    .operate-flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 28px; }
+    .operate-step { position: relative; padding: 20px; border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; background: rgba(255,255,255,0.04); }
+    .operate-step:not(:last-child)::after { content: "->"; position: absolute; right: -22px; top: 26px; color: rgba(255,255,255,0.38); font-weight: 900; }
+    .operate-num { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--red); font-size: 12px; font-weight: 900; margin-bottom: 12px; }
+    .operate-step h4 { font-size: 14px; margin-bottom: 6px; }
+    .operate-step p { color: rgba(255,255,255,0.58); font-size: 12px; line-height: 1.5; }
+    .score { display: flex; align-items: baseline; gap: 10px; margin: 10px 0; }
+    .score-num { font-size: 48px; line-height: 1; font-weight: 950; letter-spacing: -0.05em; }
+    .move { font-size: 12px; font-weight: 900; }
+    .bar { height: 8px; background: #f1f2f4; border-radius: 999px; overflow: hidden; margin-top: 16px; }
+    .bar span { display: block; height: 100%; border-radius: 999px; }
+    .chart-card { padding: 28px; }
+    .chart-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
+    .risk-select { border: 1px solid var(--line); border-radius: 999px; background: white; color: var(--ink); padding: 10px 36px 10px 14px; font-size: 13px; font-weight: 850; min-width: 240px; }
+    .chart { height: 320px; width: 100%; }
+    .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
+    .stat { background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+    .stat-value { font-size: 28px; font-weight: 950; letter-spacing: -0.04em; }
+    .stat-label { color: var(--muted); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+    .matrix { display: grid; grid-template-columns: 150px repeat(8, 1fr); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: white; }
+    .matrix-wrap { overflow-x: auto; }
+    .matrix > div { padding: 11px 8px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); font-size: 11px; font-weight: 800; }
+    .matrix > div:nth-child(9n) { border-right: 0; }
+    .matrix .head { background: #f9fafb; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; font-size: 9px; text-align: center; }
+    .risk-high { background: rgba(200,16,46,0.1); color: var(--red); text-align: center; }
+    .risk-high-strong { background: rgba(200,16,46,0.2); color: #991b1b; text-align: center; font-weight: 900; }
+    .risk-mid { background: rgba(245,158,11,0.13); color: #b45309; text-align: center; }
+    .risk-low { background: rgba(22,163,74,0.1); color: var(--green); text-align: center; }
+    .list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+    .list li { display: flex; gap: 10px; }
+    .arrow { color: var(--red); font-weight: 900; flex-shrink: 0; }
+    .timeline { position: relative; display: grid; gap: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: white; }
+    .timeline-item { display: grid; grid-template-columns: 140px 1fr 200px; gap: 22px; padding: 24px; border-bottom: 1px solid var(--line); align-items: start; }
+    .timeline-item:last-child { border-bottom: 0; }
+    .timeline-stage { color: var(--red); font-size: 11px; font-weight: 950; letter-spacing: 0.08em; text-transform: uppercase; }
+    .timeline-item h3 { font-size: 18px; margin: 0 0 8px; }
+    .timeline-item p { margin: 0; }
+    .timeline-chip { justify-self: end; align-self: start; border-radius: 999px; padding: 7px 11px; background: #f9fafb; border: 1px solid var(--line); color: #374151; font-size: 11px; font-weight: 900; }
+    .rhythm-row { display: grid; grid-template-columns: 160px 1fr; gap: 24px; padding: 22px 0; border-bottom: 1px solid var(--line); }
+    .rhythm-row:last-child { border-bottom: 0; }
+    .rhythm-label { font-size: 11px; font-weight: 900; letter-spacing: 0.08em; color: var(--red); }
+    .deliverable { border-top: 3px solid var(--red); }
+    .pillar-card { position: relative; overflow: hidden; min-height: 390px; padding: 28px; }
+    .pillar-card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 5px; background: var(--red); }
+    .pillar-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 20px; }
+    .pillar-name { font-size: 32px; font-weight: 950; letter-spacing: -0.05em; color: var(--ink); }
+    .pillar-block { border-top: 1px solid var(--line); padding-top: 16px; margin-top: 16px; }
+    .pillar-block strong { display: block; color: var(--red); font-size: 11px; font-weight: 950; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 7px; }
+    .footer { text-align: center; padding: 30px; color: #9ca3af; font-size: 11px; border-top: 1px solid var(--line); }
+
+    #value-hint { position: fixed; right: 0px; bottom: 98px; z-index: 31; display: flex; flex-direction: column; align-items: center; gap: 4px; pointer-events: none; transition: opacity 0.25s; width: 120px; }
+    #value-hint .hint-label { background: white; color: #1a1a2e; border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 900; white-space: nowrap; letter-spacing: 0.04em; box-shadow: 0 6px 18px rgba(0,0,0,0.30); }
+    #value-hint .hint-arrow { color: var(--red); font-size: 26px; line-height: 1; animation: hint-bounce 0.9s ease-in-out infinite; }
+    @keyframes hint-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+    #value-btn { position: fixed; right: 24px; bottom: 24px; z-index: 30; border: 0; border-radius: 999px; background: var(--red); color: white; box-shadow: 0 12px 30px rgba(0,0,0,0.22); padding: 13px 18px; font-weight: 900; cursor: pointer; }
+    #value-panel { position: fixed; right: 24px; bottom: 78px; width: min(420px, calc(100vw - 48px)); max-height: 62vh; overflow: auto; z-index: 30; background: white; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 22px 60px rgba(17,24,39,0.22); display: none; }
+    #value-panel.open { display: block; }
+    .value-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--line); font-weight: 900; }
+    .value-close { border: 0; background: transparent; font-size: 22px; cursor: pointer; color: var(--muted); }
+    .value-body { padding: 18px; display: grid; gap: 16px; }
+    .value-point { display: grid; grid-template-columns: 8px 1fr; gap: 12px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+    .value-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); margin-top: 6px; }
+    .value-point strong { color: var(--ink); }
+    @media (max-width: 900px) {
+      .nav { display: none; }
+      .grid-2, .grid-3, .grid-4, .operate-flow { grid-template-columns: 1fr; }
+      .operate-step:not(:last-child)::after { display: none; }
+      .rhythm-row { grid-template-columns: 1fr; gap: 8px; }
+      .timeline-item { grid-template-columns: 1fr; gap: 10px; }
+      .timeline-chip { justify-self: start; }
+      .chart-head { display: block; }
+      .risk-select { width: 100%; margin-top: 14px; }
+      .stat-row { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><span class="brand-mark">AA</span><span>Anglo American Risk Intelligence</span></div>
+    <nav class="nav">
+      <a class="nav-link" data-page="detect" onclick="showPage('detect')"><span class="nav-num">1</span>Detect</a>
+      <a class="nav-link" data-page="quantify" onclick="showPage('quantify')"><span class="nav-num">2</span>Quantify</a>
+      <a class="nav-link" data-page="benchmark" onclick="showPage('benchmark')"><span class="nav-num">3</span>Benchmark</a>
+      <a class="nav-link" data-page="context" onclick="showPage('context')"><span class="nav-num">4</span>Context</a>
+      <a class="nav-link" data-page="decide" onclick="showPage('decide')"><span class="nav-num">5</span>Decide &amp; Plan</a>
+      <a class="nav-link" data-page="pilot" onclick="showPage('pilot')"><span class="nav-num">6</span>Pilot</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- PAGE 1: DETECT -->
+  <div class="page" id="page-detect">
+    <section class="hero">
+      <div class="wrap">
+        <div class="tag"><span class="tag-dot"></span>Detect</div>
+        <h1>Anglo American's transformation risk is not one issue.<br><span>It is portfolio complexity moving faster than external visibility.</span></h1>
+        <p>Polecat helps Anglo American detect which external signals matter, how they connect to Operational Excellence, Portfolio Simplification and Growth — and what needs action before it becomes a board-level issue.</p>
+      </div>
+    </section>
+
+    <section class="operate">
+      <div class="wrap">
+        <div class="operate-flow">
+          <div class="operate-step"><div class="operate-num">1</div><h4>Detect the signal</h4><p>Regulatory filings, trade press, financial media and geopolitical sources surface early pressure across all operating jurisdictions.</p></div>
+          <div class="operate-step"><div class="operate-num">2</div><h4>Quantify impact</h4><p>Noise becomes structured evidence — scored and classified by theme — so materiality can be judged, not guessed.</p></div>
+          <div class="operate-step"><div class="operate-num">3</div><h4>Compare history</h4><p>Prior incidents and peer precedents show the likely escalation path before the pattern is established.</p></div>
+          <div class="operate-step"><div class="operate-num">4</div><h4>Map context</h4><p>Signals are linked to Anglo American's strategic pillars and compared against BHP, Rio Tinto and Glencore exposure.</p></div>
+          <div class="operate-step"><div class="operate-num">5</div><h4>Trigger action</h4><p>Discuss Now, Monitor or Hold — a clear posture for every signal, ready for the risk committee.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Biggest events this week</p>
+          <h2 class="section-title">Three signals Anglo American should be watching</h2>
+          <p class="section-sub">Drawn from 296 Anglo American risk events tracked over the past 12 months across financial media, regulators, trade press and geopolitical sources.</p>
+        </div>
+        <div class="grid-3">
+
+          <!-- Card 1: De Beers / Botswana -->
+          <article class="card">
+            <div class="story-top">
+              <span class="chip chip-red">&#8593; Escalating</span>
+              <span class="chip chip-discuss">Discuss Now</span>
+            </div>
+            <h3>De Beers divestment blocked by competing sovereign interests</h3>
+            <p>Botswana is actively courting UAE and Oman sovereign wealth to acquire a stake in De Beers — directly complicating Anglo American's ability to close a clean exit and realise its Portfolio Simplification target.</p>
+            <div class="source-title">Signal volume</div>
+            <div class="source-row">
+              <div class="source-stat"><strong>4</strong><span>7-day signals</span></div>
+              <div class="source-stat"><strong>11</strong><span>14-day signals</span></div>
+              <div class="source-stat"><strong>28</strong><span>30-day signals</span></div>
+            </div>
+            <div class="divider-note">
+              <strong>Sources</strong>
+              <div class="source-list">Reuters, Bloomberg Markets, Mining Weekly, Gulf News, Financial Times</div>
+              <strong style="margin-top:10px;">Why it matters</strong>
+              <p style="margin-top:4px;">De Beers is the keystone of Anglo American's simplification plan. A contested divestment — with a sovereign buyer competing against private interest — raises transaction risk, timeline uncertainty, and potential government-imposed terms that could erode sale value or restrict future asset strategy.</p>
+            </div>
+          </article>
+
+          <!-- Card 2: Quellaveco Water -->
+          <article class="card">
+            <div class="story-top">
+              <span class="chip chip-red">&#8593; Escalating</span>
+              <span class="chip chip-discuss">Discuss Now</span>
+            </div>
+            <h3>Quellaveco copper mine linked to water scarcity and contamination in Peru</h3>
+            <p>An independent investigation has connected Anglo American's flagship Quellaveco copper operation to water stress and contamination concerns in the Moquegua region, threatening the social licence for their most strategically critical copper growth asset.</p>
+            <div class="source-title">Signal volume</div>
+            <div class="source-row">
+              <div class="source-stat"><strong>6</strong><span>7-day signals</span></div>
+              <div class="source-stat"><strong>14</strong><span>14-day signals</span></div>
+              <div class="source-stat"><strong>31</strong><span>30-day signals</span></div>
+            </div>
+            <div class="divider-note">
+              <strong>Sources</strong>
+              <div class="source-list">Agencia Andina, Mining.com, S&amp;P Global Commodity Insights, Reuters Latin America, CooperAccion NGO</div>
+              <strong style="margin-top:10px;">Why it matters</strong>
+              <p style="margin-top:4px;">Quellaveco is Anglo American's centrepiece copper growth asset — the fund for their Growth pillar and a core rationale for investor confidence. A social licence challenge in Peru is not just a reputation issue: it directly threatens the production ramp-up that underpins Anglo American's copper growth thesis.</p>
+            </div>
+          </article>
+
+          <!-- Card 3: Woodsmith Costs -->
+          <article class="card">
+            <div class="story-top">
+              <span class="chip chip-amber">&#8594; Holding</span>
+              <span class="chip chip-monitor">Monitor</span>
+            </div>
+            <h3>Woodsmith project: £2.7bn spent with production approvals still outstanding</h3>
+            <p>Anglo American has confirmed cumulative Woodsmith spend at £2.7bn — while simultaneously seeking to lift production limits for polyhalite extraction. The project received unanimous shareholder support for a redesign but regulatory and cost execution risk remain material.</p>
+            <div class="source-title">Signal volume</div>
+            <div class="source-row">
+              <div class="source-stat"><strong>9</strong><span>7-day signals</span></div>
+              <div class="source-stat"><strong>18</strong><span>14-day signals</span></div>
+              <div class="source-stat"><strong>24</strong><span>30-day signals</span></div>
+            </div>
+            <div class="divider-note">
+              <strong>Sources</strong>
+              <div class="source-list">The Times, Reuters, S&amp;P Global, Mining Journal, Whitby Gazette, Yorkshire Post</div>
+              <strong style="margin-top:10px;">Why it matters</strong>
+              <p style="margin-top:4px;">Woodsmith is the long-term foundation of Anglo American's Crop Nutrients vertical and a key differentiator in the growth story. Cost discipline and regulatory clarity are essential to secure syndication to a strategic partner and maintain investor confidence in the development timeline.</p>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+    <div class="footer">Illustrative data for demonstration purposes - Polecat Risk Intelligence</div>
+  </div>
+
+
+  <!-- PAGE 2: QUANTIFY -->
+  <div class="page" id="page-quantify">
+    <section class="hero">
+      <div class="wrap">
+        <div class="tag"><span class="tag-dot"></span>Quantify</div>
+        <h1>The question is not whether risk exists.<br><span>It is how much, in which direction, and how fast.</span></h1>
+        <p>Polecat enhances Anglo American's existing risk register scores with external evidence from regulators, media and financial analysts — turning qualitative judgements into a defensible, board-ready risk position.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Register enhancement</p>
+          <h2 class="section-title">Pressure points to watch</h2>
+          <p class="section-sub">Anglo American's internal register score provides the baseline. Polecat adds external evidence to show where internal ratings should rise, fall or hold.</p>
+        </div>
+        <div class="grid-3">
+
+          <!-- Card 1: Geopolitical Country Risk - DISCUSS NOW -->
+          <article class="card">
+            <div class="story-top">
+              <div>
+                <span class="chip chip-discuss">Discuss Now</span>
+              </div>
+              <span style="font-size:11px;color:var(--muted);font-weight:700;">Geopolitical &amp; Country Risk</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;margin:12px 0;">
+              <div style="text-align:center;">
+                <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Register</div>
+                <div style="font-size:32px;font-weight:950;letter-spacing:-0.04em;color:var(--muted);">45</div>
+              </div>
+              <div style="font-size:22px;color:var(--red);font-weight:900;">&#8594;</div>
+              <div style="text-align:center;">
+                <div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;margin-bottom:4px;">Polecat</div>
+                <div style="font-size:32px;font-weight:950;letter-spacing:-0.04em;color:var(--red);">72</div>
+              </div>
+              <div style="font-size:12px;font-weight:900;color:var(--red);background:rgba(200,16,46,0.08);padding:4px 8px;border-radius:6px;">+27</div>
+            </div>
+            <p>External evidence across Peru (Quellaveco water), Botswana (De Beers stake), Chile (Codelco antitrust), and South Africa (labour market) shows significantly greater geopolitical exposure than internal scores reflect.</p>
+            <div class="divider-note"><strong>Reasons for the result</strong><p><span style="color:var(--red);font-weight:900;">+27</span> driven by De Beers sovereign intervention risk in Botswana, Quellaveco water investigation escalation in Peru, and Codelco antitrust complaint in Chile — three concurrent country-level events not yet reflected in the internal register.</p></div>
+            <div class="bar"><span style="width:72%;background:var(--red);"></span></div>
+          </article>
+
+          <!-- Card 2: Operational Risk - MONITOR -->
+          <article class="card">
+            <div class="story-top">
+              <div>
+                <span class="chip chip-monitor">Monitor</span>
+              </div>
+              <span style="font-size:11px;color:var(--muted);font-weight:700;">Operational Risk</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;margin:12px 0;">
+              <div style="text-align:center;">
+                <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Register</div>
+                <div style="font-size:32px;font-weight:950;letter-spacing:-0.04em;color:var(--muted);">56</div>
+              </div>
+              <div style="font-size:22px;color:#b45309;font-weight:900;">&#8594;</div>
+              <div style="text-align:center;">
+                <div style="font-size:11px;font-weight:700;color:#b45309;text-transform:uppercase;margin-bottom:4px;">Polecat</div>
+                <div style="font-size:32px;font-weight:950;letter-spacing:-0.04em;color:#b45309;">66</div>
+              </div>
+              <div style="font-size:12px;font-weight:900;color:#b45309;background:rgba(245,158,11,0.12);padding:4px 8px;border-radius:6px;">+10</div>
+            </div>
+            <p>Woodsmith cost discipline, production limit challenges, and ongoing Q1 2026 copper output targets are generating moderate external pressure. Anglo American maintained full-year guidance but external scrutiny is elevated.</p>
+            <div class="divider-note"><strong>Reasons for the result</strong><p><span style="color:#b45309;font-weight:900;">+10</span> from Woodsmith delivery timeline coverage, copper production target scrutiny from analysts, and Quellaveco operational access concerns — offset partially by positive Teck copper asset integration signals.</p></div>
+            <div class="bar"><span style="width:66%;background:#f59e0b;"></span></div>
+          </article>
+
+          <!-- Card 3: ESG / Social Licence - HOLD -->
+          <article class="card">
+            <div class="story-top">
+              <div>
+                <span class="chip chip-hold">Hold</span>
+              </div>
+              <span style="font-size:11px;color:var(--muted);font-weight:700;">ESG &amp; Social Licence</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;margin:12px 0;">
+              <div style="text-align:center;">
+                <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;margin-bottom:4px;">Register</div>
+                <div style="font-size:32px;font-weight:950;letter-spacing:-0.04em;color:var(--muted);">60</div>
+              </div>
+              <div style="font-size:22px;color:var(--green);font-weight:900;">&#8594;</div>
+              <div style="text-align:center;">
+                <div style="font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;margin-bottom:4px;">Polecat</div>
+                <div style="font-size:32px;font-weight:950;letter-spacing:-0.04em;color:var(--green);">50</div>
+              </div>
+              <div style="font-size:12px;font-weight:900;color:var(--green);background:rgba(22,163,74,0.1);padding:4px 8px;border-radius:6px;">-10</div>
+            </div>
+            <p>The coal exit trajectory — $3.9bn Australian coal mine sale — is improving ESG positioning externally. Anticompetitive practice controversies remain a watchlist item, but the direction of travel on ESG is positive.</p>
+            <div class="divider-note"><strong>Reasons for the result</strong><p><span style="color:var(--green);font-weight:900;">-10</span> from strong positive ESG signal volume around the Australian coal sale and improving safety record coverage — partially offset by 15 anticompetitive practice controversies and Kabwe lead contamination litigation still active.</p></div>
+            <div class="bar"><span style="width:50%;background:var(--green);"></span></div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+    <div class="footer">Illustrative data for demonstration purposes - Polecat Risk Intelligence</div>
+  </div>
+
+
+  <!-- PAGE 3: BENCHMARK -->
+  <div class="page" id="page-benchmark">
+    <section class="hero">
+      <div class="wrap">
+        <div class="tag"><span class="tag-dot"></span>Benchmark</div>
+        <h1>The next question is whether Anglo American<br><span>is exposed differently from the mining sector around it.</span></h1>
+        <p>Peer context separates category-wide sector pressure from Anglo American-specific exposure — giving risk leaders a clearer benchmark for where to act and where to hold.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Benchmark</p>
+          <h2 class="section-title">Peer exposure matrix</h2>
+          <p class="section-sub">Eight risk categories across Anglo American and its three principal mining peers. Shows whether Anglo American faces sector-wide pressure or a company-specific exposure requiring independent action.</p>
+        </div>
+        <div class="matrix-wrap">
+          <div class="matrix">
+            <div class="head">Company</div>
+            <div class="head">Geo-Political</div>
+            <div class="head">Operational</div>
+            <div class="head">ESG &amp; Community</div>
+            <div class="head">Legal &amp; Compliance</div>
+            <div class="head">Financial Volatility</div>
+            <div class="head">Strategic M&amp;A</div>
+            <div class="head">Supply Chain</div>
+            <div class="head">Energy Transition</div>
+
+            <!-- Anglo American -->
+            <div style="font-weight:900;background:#fef2f2;">Anglo American</div>
+            <div class="risk-high-strong">High</div>
+            <div class="risk-mid">Mid</div>
+            <div class="risk-mid">Mid</div>
+            <div class="risk-mid">Mid</div>
+            <div class="risk-mid">Mid</div>
+            <div class="risk-high-strong">High</div>
+            <div class="risk-low">Low</div>
+            <div class="risk-mid">Mid</div>
+
+            <!-- BHP -->
+            <div>BHP Group</div>
+            <div class="risk-high">High</div>
+            <div class="risk-high">High</div>
+            <div class="risk-mid">Mid</div>
+            <div class="risk-mid">Mid</div>
+            <div class="risk-low">Low</div>
+            <div class="risk-low">Low</div>
+            <div class="risk-high">High</div>
+            <div class="risk-high">High</div>
+
+            <!-- Rio Tinto -->
+            <div>Rio Tinto</div>
+            <div class="risk-high">High</div>
+            <div class="risk-mid">Mid</div>
+            <div class="risk-high">High</div>
+            <div class="risk-mid">Mid</div>
+            <div class="risk-low">Low</div>
+            <div class="risk-low">Low</div>
+            <div class="risk-mid">Mid</div>
+            <div class="risk-mid">Mid</div>
+
+            <!-- Glencore -->
+            <div>Glencore</div>
+            <div class="risk-high">High</div>
+            <div class="risk-high">High</div>
+            <div class="risk-high">High</div>
+            <div class="risk-high">High</div>
+            <div class="risk-mid">Mid</div>
+            <div class="risk-mid">Mid</div>
+            <div class="risk-high">High</div>
+            <div class="risk-low">Low</div>
+          </div>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin-top:10px;">Strategic M&amp;A = portfolio restructuring, divestments, merger activity | Geo-Political = jurisdictional sovereign, regulatory and political exposure | ESG &amp; Community = social licence, environmental and human rights signals</p>
+      </div>
+    </section>
+
+    <section style="background:var(--soft);">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Benchmark</p>
+          <h2 class="section-title">Risk score over time</h2>
+          <p class="section-sub">Track how each organisation's external risk score has moved across the last 12 months for any risk category. Based on actual PolecatX event-level scoring.</p>
+        </div>
+        <div class="card" style="padding:24px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+            <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;font-weight:700;">
+              <span style="color:#C8102E;">&#9473; Anglo American</span>
+              <span style="color:#b45309;">&#9473; BHP Group</span>
+              <span style="color:#1d4ed8;">&#9473; Rio Tinto</span>
+              <span style="color:#7c3aed;">&#9473; Glencore</span>
+            </div>
+            <select id="benchCatSelect" onchange="drawBenchChart()" style="border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;background:white;color:var(--ink);cursor:pointer;">
+              <option value="geo">Geopolitical &amp; country risk</option>
+              <option value="ops">Operational risk</option>
+              <option value="esg">ESG &amp; community licence</option>
+              <option value="legal">Legal &amp; compliance</option>
+              <option value="financial">Financial volatility</option>
+              <option value="mna">Strategic M&amp;A pressure</option>
+              <option value="supply">Supply chain disruption</option>
+              <option value="energy">Energy transition</option>
+            </select>
+          </div>
+          <div style="position:relative;height:480px;width:100%;"><canvas id="benchChart"></canvas></div>
+        </div>
+      </div>
+    </section>
+    <div class="footer">Illustrative data for demonstration purposes - Polecat Risk Intelligence</div>
+  </div>
+
+
+  <!-- PAGE 4: CONTEXT -->
+  <div class="page" id="page-context">
+    <section class="hero">
+      <div class="wrap">
+        <div class="tag"><span class="tag-dot"></span>Context</div>
+        <h1>External risk lands differently<br><span>against each of Anglo American's three strategic pillars.</span></h1>
+        <p>Polecat maps external signals to Operational Excellence, Portfolio Simplification and Growth — giving the risk team a strategic lens, not just a list of events.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Strategic context</p>
+          <h2 class="section-title">Strategic pillars under external pressure</h2>
+        </div>
+        <div class="grid-3">
+
+          <!-- Pillar 1: Operational Excellence -->
+          <article class="card pillar-card">
+            <div class="pillar-top">
+              <div>
+                <div class="eyebrow">Pillar 1</div>
+                <h3 class="pillar-name">Operational Excellence</h3>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+                <span class="chip chip-rising">&#8593; Rising</span>
+                <span class="chip chip-monitor">Monitor</span>
+              </div>
+            </div>
+            <div class="pillar-block" style="margin-top:14px;">
+              <strong style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;">Signals picked up</strong>
+              <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+                <div style="background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:10px 12px;">
+                  <div style="font-size:11px;font-weight:700;color:#d97706;margin-bottom:3px;">May 2026 - CooperAccion / Reuters</div>
+                  <div style="font-size:13px;color:#111827;line-height:1.4;">Independent investigation links Quellaveco mine to water scarcity and contamination in Moquegua region. Social licence implications flagged in 31 sources.</div>
+                </div>
+                <div style="background:#fffbeb;border-left:3px solid #f59e0b;border-radius:0 8px 8px 0;padding:10px 12px;">
+                  <div style="font-size:11px;font-weight:700;color:#d97706;margin-bottom:3px;">Apr 2026 - S&amp;P Global / Mining Journal</div>
+                  <div style="font-size:13px;color:#111827;line-height:1.4;">Anglo American seeks to lift Woodsmith production limits for polyhalite extraction. Regulatory approvals outstanding. £2.7bn cumulative spend confirmed.</div>
+                </div>
+              </div>
+            </div>
+            <div class="pillar-block">
+              <strong>Strategic impact</strong>
+              <p>Operational Excellence starts with safety and social licence. A water contamination investigation at Quellaveco — Anglo American's flagship copper asset — challenges the foundational premise of the pillar. If the environmental challenge escalates to regulatory sanction, it disrupts mine planning and undermines the copper growth thesis simultaneously.</p>
+            </div>
+            <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 14px;margin-top:14px;">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#c2410c;margin-bottom:4px;">Committee question</div>
+              <div style="font-size:13px;color:#374151;line-height:1.4;">Are water management and community consultation protocols at Quellaveco robust enough to withstand independent scrutiny — and is there an early warning system before the next investigation?</div>
+            </div>
+          </article>
+
+          <!-- Pillar 2: Portfolio Simplification -->
+          <article class="card pillar-card">
+            <div class="pillar-top">
+              <div>
+                <div class="eyebrow">Pillar 2</div>
+                <h3 class="pillar-name">Portfolio Simplification</h3>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+                <span class="chip chip-rising">&#8593; Rising</span>
+                <span class="chip chip-discuss">Discuss Now</span>
+              </div>
+            </div>
+            <div class="pillar-block" style="margin-top:14px;">
+              <strong style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;">Signals picked up</strong>
+              <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+                <div style="background:#fef2f2;border-left:3px solid #C8102E;border-radius:0 8px 8px 0;padding:10px 12px;">
+                  <div style="font-size:11px;font-weight:700;color:#C8102E;margin-bottom:3px;">Jun 2026 - Reuters / Gulf News / Bloomberg</div>
+                  <div style="font-size:13px;color:#111827;line-height:1.4;">Botswana engages UAE and Oman sovereign wealth to acquire De Beers stake. Bid deadline pressure intensifies. Political dimension complicates sale structure.</div>
+                </div>
+                <div style="background:#fef2f2;border-left:3px solid #C8102E;border-radius:0 8px 8px 0;padding:10px 12px;">
+                  <div style="font-size:11px;font-weight:700;color:#C8102E;margin-bottom:3px;">May 2026 - Financial Times / Mining Weekly</div>
+                  <div style="font-size:13px;color:#111827;line-height:1.4;">Australian coal sale to UK firm confirmed at up to $3.9bn. Empres-rio raises competing offer for Brazil asset. Multiple parallel divestments under negotiation simultaneously.</div>
+                </div>
+              </div>
+            </div>
+            <div class="pillar-block">
+              <strong>Strategic impact</strong>
+              <p>Portfolio Simplification is Anglo American's primary near-term value story. The risk is not executing individual divestments — it is managing concurrent transactions across three continents, with sovereign governments, competing bidders and regulatory approvals all running in parallel. A stumble in De Beers could dominate the external narrative and mask execution progress elsewhere.</p>
+            </div>
+            <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 14px;margin-top:14px;">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#c2410c;margin-bottom:4px;">Committee question</div>
+              <div style="font-size:13px;color:#374151;line-height:1.4;">With De Beers, coal and Brazil assets all in divestment processes simultaneously, what is the board's view on sequencing risk — and how does external narrative around each transaction affect investor confidence in the overall plan?</div>
+            </div>
+          </article>
+
+          <!-- Pillar 3: Growth -->
+          <article class="card pillar-card">
+            <div class="pillar-top">
+              <div>
+                <div class="eyebrow">Pillar 3</div>
+                <h3 class="pillar-name">Growth</h3>
+              </div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+                <span class="chip chip-stable">&#8594; Stable</span>
+                <span class="chip chip-monitor">Monitor</span>
+              </div>
+            </div>
+            <div class="pillar-block" style="margin-top:14px;">
+              <strong style="font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;">Signals picked up</strong>
+              <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px;">
+                <div style="background:#f0fdf4;border-left:3px solid #16a34a;border-radius:0 8px 8px 0;padding:10px 12px;">
+                  <div style="font-size:11px;font-weight:700;color:#15803d;margin-bottom:3px;">Apr-May 2026 - Reuters / Anglo American Investor Relations</div>
+                  <div style="font-size:13px;color:#111827;line-height:1.4;">Teck merger shareholder approval confirmed. Copper target price raised to 4,500p. Codelco antitrust clearance secured in Chile. Anglo American leads mining rebound.</div>
+                </div>
+                <div style="background:#fef2f2;border-left:3px solid #C8102E;border-radius:0 8px 8px 0;padding:10px 12px;">
+                  <div style="font-size:11px;font-weight:700;color:#C8102E;margin-bottom:3px;">Apr 2026 - Mining.com / Environmental Monitor</div>
+                  <div style="font-size:13px;color:#111827;line-height:1.4;">Anglo American and Codelco seeking separate environmental approvals for shared copper infrastructure — regulatory complexity and timeline uncertainty on the joint Los Bronces development.</div>
+                </div>
+              </div>
+            </div>
+            <div class="pillar-block">
+              <strong>Strategic impact</strong>
+              <p>The Growth pillar is directionally positive — Teck approval, copper analyst upgrades, and Woodsmith redesign support all landed well. The risk to watch is execution sequencing: environmental permitting delays on shared copper infrastructure, and the question of whether the Woodsmith syndication timeline remains on track for first-half 2025 feasibility commitment.</p>
+            </div>
+            <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 14px;margin-top:14px;">
+              <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#c2410c;margin-bottom:4px;">Committee question</div>
+              <div style="font-size:13px;color:#374151;line-height:1.4;">As copper growth is the central investor thesis, how exposed is that story if environmental permitting at Los Bronces or social licence at Quellaveco creates a gap between the copper growth narrative and operational delivery?</div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+    <div class="footer">Illustrative data for demonstration purposes - Polecat Risk Intelligence</div>
+  </div>
+
+
+  <!-- PAGE 5: DECIDE & PLAN -->
+  <div class="page" id="page-decide">
+    <section class="hero">
+      <div class="wrap">
+        <div class="tag"><span class="tag-dot"></span>Decide &amp; Plan</div>
+        <h1>Once risk is benchmarked and contextualised,<br><span>Anglo American can decide what to do and plan what comes next.</span></h1>
+        <p>External intelligence becomes a decision posture, an operating rhythm, and a committee-ready plan — connected to the pillars that matter most to the board.</p>
+      </div>
+    </section>
+
+    <section style="background:var(--soft);">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Decide &amp; Plan</p>
+          <h2 class="section-title">Worked Example: De Beers divestment complexity</h2>
+          <p class="section-sub">How a sovereign intervention in a divestment process moves from external signal to strategic exposure, ownership and action posture.</p>
+        </div>
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-stage">1. Event</div>
+            <div>
+              <h3>Botswana courts Gulf sovereign wealth for De Beers stake</h3>
+              <p>A geopolitical signal — Botswana government actively engaging UAE and Oman investors — enters the external record before any formal announcement or internal escalation.</p>
+            </div>
+            <span class="timeline-chip">External signal</span>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-stage">2. Quantify</div>
+            <div>
+              <h3>Register score enhanced with sovereign deal complexity evidence</h3>
+              <p>Polecat keeps Anglo American's Third-Party Risk register score as baseline, then adds evidence: competing bidder signals, government statements, Gulf media coverage, precedent from similar diamond asset transactions in resource-dependent states.</p>
+            </div>
+            <span class="timeline-chip">45 &#8594; 72</span>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-stage">3. Context</div>
+            <div>
+              <h3>Signal mapped to Portfolio Simplification pillar</h3>
+              <p>This is not a standalone third-party event. It directly challenges Anglo American's primary near-term value story: a clean, timely De Beers exit at acceptable terms. Sovereign involvement introduces regulatory, reputational and financial complexity simultaneously.</p>
+            </div>
+            <span class="timeline-chip">Portfolio Simplification</span>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-stage">4. Ownership</div>
+            <div>
+              <h3>Decision owners and escalation thresholds made explicit</h3>
+              <p>Corporate Development, Legal, Government Affairs and Risk Leadership can align on what additional signals — Gulf government statements, formal bid announcements, Botswana regulatory moves — would trigger escalation to board level.</p>
+            </div>
+            <span class="timeline-chip">Owner-ready</span>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-stage">5. Decision</div>
+            <div>
+              <h3>Anglo American receives a clear action posture</h3>
+              <p>The output: Discuss Now — validate deal-structure assumptions against sovereign participation scenarios, monitor Gulf media and Botswana government signalling, agree the next review point with the board.</p>
+            </div>
+            <span class="timeline-chip">Discuss Now</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Decide &amp; Plan</p>
+          <h2 class="section-title">Make risk intelligence routine</h2>
+          <p class="section-sub">Continuous intelligence, structured into decision-ready outputs at every timescale — calibrated to Anglo American's reporting cadence.</p>
+        </div>
+        <div class="card">
+          <div class="rhythm-row"><div class="rhythm-label">DAILY / WEEKLY</div><div><h3>Signal alerts when risk themes cross thresholds</h3><p>Immediate escalation triggers for divestment developments, Quellaveco environmental signals, Teck/copper regulatory approvals and Woodsmith planning news.</p></div></div>
+          <div class="rhythm-row"><div class="rhythm-label">WEEKLY</div><div><h3>External risk digest by pillar</h3><p>What moved, what matters, and what to watch across Operational Excellence, Portfolio Simplification and Growth — in one structured briefing.</p></div></div>
+          <div class="rhythm-row"><div class="rhythm-label">MONTHLY</div><div><h3>Portfolio and pillar risk dashboard update</h3><p>Priority movement tracked against each strategic pillar, with peer movement and sector context for the executive committee.</p></div></div>
+          <div class="rhythm-row"><div class="rhythm-label">QUARTERLY</div><div><h3>Board-ready external risk position</h3><p>External risk score, peer benchmark, strategic pillar exposure and recommended postures — structured for the Audit and Risk Committee.</p></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section style="background:var(--soft);">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Decide &amp; Plan</p>
+          <h2 class="section-title">Decision-ready outputs</h2>
+        </div>
+        <div class="grid-3">
+          <article class="card deliverable"><h3>Executive briefing</h3><p>Board-ready summary of Anglo American's external risk position and recommended posture across all three strategic pillars.</p></article>
+          <article class="card deliverable"><h3>Risk register mapping</h3><p>External signals mapped to Anglo American's risk categories, ownership and existing register entries for seamless integration.</p></article>
+          <article class="card deliverable"><h3>Divestment signal watchlist</h3><p>Monitored signals across De Beers, coal, Brazil and Woodsmith — with movement indicators and escalation flags for Corporate Development.</p></article>
+          <article class="card deliverable"><h3>Peer movement tracker</h3><p>BHP, Rio Tinto and Glencore external risk trajectory versus Anglo American — by category, by month, by pillar.</p></article>
+          <article class="card deliverable"><h3>Recommended actions by owner</h3><p>Signal, pillar owner, posture and suggested next action for each Discuss Now and Monitor item — ready to assign at committee.</p></article>
+          <article class="card deliverable"><h3>Audit &amp; Risk Committee summary</h3><p>Direct, structured and action-oriented external risk briefing for the Audit and Risk Committee, in Anglo American's own language.</p></article>
+        </div>
+      </div>
+    </section>
+    <div class="footer">Illustrative data for demonstration purposes - Polecat Risk Intelligence</div>
+  </div>
+
+
+  <!-- PAGE 6: PILOT -->
+  <div class="page" id="page-pilot">
+    <section class="hero">
+      <div class="wrap">
+        <div class="tag"><span class="tag-dot"></span>Pilot Plan</div>
+        <h1>From this conversation<br><span>to full Anglo American risk intelligence.</span></h1>
+        <p>A clear four-step path from where we are now to an embedded, committee-ready external risk capability aligned to Operational Excellence, Portfolio Simplification and Growth.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">Pilot</p>
+          <h2 class="section-title">The journey</h2>
+          <p class="section-sub">Each stage is designed to build confidence and demonstrate value before committing to the next.</p>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative;margin-bottom:48px;">
+          <div style="padding:24px 20px 28px;border-top:4px solid var(--red);background:rgba(200,16,46,0.04);border-radius:12px 0 0 12px;position:relative;">
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:var(--red);color:white;font-size:14px;font-weight:900;margin-bottom:14px;">1</div>
+            <div style="position:absolute;top:36px;right:-14px;z-index:2;color:var(--red);font-size:22px;font-weight:900;">&#8250;</div>
+            <p class="eyebrow" style="color:var(--red);margin-bottom:6px;">Now</p>
+            <h3 style="font-size:17px;font-weight:900;margin-bottom:10px;line-height:1.2;">Demonstration</h3>
+            <p style="font-size:13px;color:var(--muted);line-height:1.5;">Who we are, what we see, and how we map external signals to Anglo American's strategic pillars. This conversation.</p>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(200,16,46,0.15);">
+              <p style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--red);margin-bottom:6px;">You are here</p>
+              <p style="font-size:12px;color:var(--muted);">Live demo built on Anglo American's actual PolecatX event data.</p>
+            </div>
+          </div>
+
+          <div style="padding:24px 20px 28px;border-top:4px solid #f59e0b;background:rgba(245,158,11,0.04);position:relative;">
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#f59e0b;color:white;font-size:14px;font-weight:900;margin-bottom:14px;">2</div>
+            <div style="position:absolute;top:36px;right:-14px;z-index:2;color:#f59e0b;font-size:22px;font-weight:900;">&#8250;</div>
+            <p class="eyebrow" style="color:#b45309;margin-bottom:6px;">Next step</p>
+            <h3 style="font-size:17px;font-weight:900;margin-bottom:10px;line-height:1.2;">Personalised PoC</h3>
+            <p style="font-size:13px;color:var(--muted);line-height:1.5;">Polecat runs a tailored proof of concept using Anglo American's actual risk priorities, peer set and divestment watchlist. Real data, no generic output.</p>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(245,158,11,0.2);">
+              <p style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#b45309;margin-bottom:6px;">Outcome</p>
+              <p style="font-size:12px;color:var(--muted);">A working risk intelligence view built around Anglo American's three pillars — ready to present to the Audit and Risk Committee.</p>
+            </div>
+          </div>
+
+          <div style="padding:24px 20px 28px;border-top:4px solid #6366f1;background:rgba(99,102,241,0.04);position:relative;">
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#6366f1;color:white;font-size:14px;font-weight:900;margin-bottom:14px;">3</div>
+            <div style="position:absolute;top:36px;right:-14px;z-index:2;color:#6366f1;font-size:22px;font-weight:900;">&#8250;</div>
+            <p class="eyebrow" style="color:#4338ca;margin-bottom:6px;">3 months</p>
+            <h3 style="font-size:17px;font-weight:900;margin-bottom:10px;line-height:1.2;">Risk Assessment</h3>
+            <p style="font-size:13px;color:var(--muted);line-height:1.5;">A structured 3-month programme to embed Polecat into Anglo American's risk cadence and prove decision value to the board.</p>
+            <div style="margin-top:14px;display:flex;flex-direction:column;gap:6px;">
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="width:20px;height:20px;border-radius:50%;background:#6366f1;color:white;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;flex-shrink:0;">A</span><span style="color:var(--muted);">Align - pillars, peers, risk categories</span></div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="width:20px;height:20px;border-radius:50%;background:#6366f1;color:white;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;flex-shrink:0;">B</span><span style="color:var(--muted);">Build - configure, calibrate, set thresholds</span></div>
+              <div style="display:flex;align-items:center;gap:8px;font-size:12px;"><span style="width:20px;height:20px;border-radius:50%;background:#6366f1;color:white;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;flex-shrink:0;">R</span><span style="color:var(--muted);">Run - weekly intelligence, track divestment movement</span></div>
+            </div>
+          </div>
+
+          <div style="padding:24px 20px 28px;border-top:4px solid #16a34a;background:rgba(22,163,74,0.04);border-radius:0 12px 12px 0;">
+            <div style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#16a34a;color:white;font-size:14px;font-weight:900;margin-bottom:14px;">4</div>
+            <p class="eyebrow" style="color:#15803d;margin-bottom:6px;">Full deployment</p>
+            <h3 style="font-size:17px;font-weight:900;margin-bottom:10px;line-height:1.2;">Full License</h3>
+            <p style="font-size:13px;color:var(--muted);line-height:1.5;">Polecat becomes part of Anglo American's risk operating rhythm — alerts, digests, board briefings and divestment watchlists running continuously across all three pillars.</p>
+            <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(22,163,74,0.2);">
+              <p style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#15803d;margin-bottom:6px;">Outcome</p>
+              <p style="font-size:12px;color:var(--muted);">External risk intelligence embedded in the Audit and Risk Committee cycle.</p>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:white;border:1px solid var(--line);border-radius:12px;padding:48px 40px;margin-top:32px;text-align:center;box-shadow:0 4px 24px rgba(17,24,39,0.07);">
+          <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQrtGy-4d1DgHmwssdagxJP5jsqvogKkJzIng&s" alt="Polecat" style="height:48px;object-fit:contain;margin-bottom:20px;display:block;margin-left:auto;margin-right:auto;" />
+          <p style="font-weight:900;letter-spacing:0.08em;text-transform:uppercase;color:var(--red);font-size:11px;margin-bottom:10px;">Ready to see what Polecat sees?</p>
+          <h2 style="font-size:clamp(22px,3vw,34px);line-height:1.12;max-width:700px;margin:0 auto 14px;letter-spacing:-0.03em;font-weight:950;color:var(--ink);">Which external signals should Anglo American act on before they become visible internally?</h2>
+          <p style="color:var(--muted);font-size:15px;max-width:540px;margin:0 auto 28px;line-height:1.6;">Book a conversation with a Polecat risk intelligence specialist to see exactly what we detect across Anglo American's full operating footprint.</p>
+          <a href="https://outlook.office.com/book/Polecat1@polecat.com/?ismsaljsauthenabled" target="_blank" style="display:inline-flex;align-items:center;gap:10px;background:var(--red);color:white;font-weight:900;font-size:15px;padding:15px 32px;border-radius:999px;text-decoration:none;letter-spacing:-0.01em;box-shadow:0 8px 24px rgba(200,16,46,0.25);" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
+            <span>Book a conversation</span><span style="font-size:18px;line-height:1;">&#8594;</span>
+          </a>
+        </div>
+      </div>
+    </section>
+    <div class="footer">Illustrative data for demonstration purposes - Polecat Risk Intelligence</div>
+  </div>
+
+</main>
+
+<button id="value-btn" onclick="toggleValue()">Value</button>
+<div id="value-hint"><span class="hint-label">Click here</span><span class="hint-arrow">↓</span></div>
+<aside id="value-panel">
+  <div class="value-head"><span>Section Value</span><button class="value-close" onclick="toggleValue()">&#215;</button></div>
+  <div class="value-body" id="value-body"></div>
+</aside>
+
+<script>
+const values = {
+  'detect': [
+    "Biggest events this week: Gives Anglo American's risk leader a fast detection layer across 296 tracked events — showing which external narratives around De Beers, Quellaveco and Woodsmith need attention before they reach the board.",
+    "How Polecat Operates: Demonstrates the full journey from detecting a signal across regulatory, geopolitical and media sources, to quantifying impact, benchmarking against peers, and triggering a clear action posture."
+  ],
+  'quantify': [
+    "Register enhancement: Enhances Anglo American's existing risk register scores with external evidence — giving the Chief Risk Officer a defensible view of where internal ratings should rise, particularly on Geopolitical and Country Risk which runs 27 points above internal assessment.",
+    "Escalation forecast: Helps Anglo American move from reactive risk management to forward planning by showing whether geopolitical or operational pressure is likely to escalate or ease over the next quarter — particularly relevant during active divestment processes."
+  ],
+  'benchmark': [
+    "Peer exposure matrix: Shows where Anglo American faces idiosyncratic risk versus sector-wide pressure — Strategic M&A and Geopolitical are specific to Anglo American's current position, while Operational and ESG are shared mining sector challenges.",
+    "12-month trend chart: Demonstrates that Anglo American's risk score has consistently tracked below the broader mining industry average — a potential competitive differentiation story for ESG-focused investors and a baseline the risk team can defend to the board."
+  ],
+  'context': [
+    "Strategic pillars under pressure: Maps external signals directly to Operational Excellence, Portfolio Simplification and Growth — so the risk team can brief the board in the language of strategy, not just events."
+  ],
+  'decide': [
+    "Worked Example: Shows how the De Beers sovereign intervention moves from external signal to enhanced register score, strategic pillar mapping, ownership and action posture in five steps.",
+    "Make risk intelligence routine: Turns external intelligence into a repeatable governance input at every reporting cadence — from daily deal monitoring to quarterly Audit and Risk Committee briefings."
+  ],
+  'pilot': []
+};
+
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  const page = document.getElementById('page-' + pageId);
+  const link = document.querySelector('[data-page="' + pageId + '"]');
+  if (page) page.classList.add('active');
+  if (link) link.classList.add('active');
+  updateValue(pageId);
+  if (pageId === 'benchmark') setTimeout(drawBenchChart, 150);
+  window.scrollTo(0, 0);
+  const hint = document.getElementById('value-hint');
+  if (hint) hint.style.opacity = (pageId === 'detect') ? '1' : '0';
+}
+
+function toggleValue() {
+  document.getElementById('value-panel').classList.toggle('open');
+  const hint = document.getElementById('value-hint');
+  if (hint) hint.style.opacity = '0';
+}
+
+function updateValue(pageId) {
+  const pts = values[pageId] || [];
+  const body = document.getElementById('value-body');
+  const btn = document.getElementById('value-btn');
+  const panel = document.getElementById('value-panel');
+  btn.style.display = pts.length ? 'block' : 'none';
+  if (!pts.length) panel.classList.remove('open');
+  body.innerHTML = pts.map(p => {
+    const i = p.indexOf(':');
+    const title = i >= 0 ? p.slice(0, i + 1) : p;
+    const value = i >= 0 ? p.slice(i + 1).trim() : '';
+    return '<div class="value-point"><div class="value-dot"></div><div><strong>' + title + '</strong><br>' + value + '</div></div>';
+  }).join('');
+}
+
+
+// ── Benchmark chart ──────────────────────────────────────────────────────────
+const benchMonths = ['Jun 25','Jul 25','Aug 25','Sep 25','Oct 25','Nov 25','Dec 25','Jan 26','Feb 26','Mar 26','Apr 26','May 26'];
+const benchOrgs = [
+  { label: 'Anglo American', color: '#C8102E', fill: 'rgba(200,16,46,0.06)' },
+  { label: 'BHP Group',      color: '#b45309', fill: 'rgba(180,83,9,0.06)'  },
+  { label: 'Rio Tinto',      color: '#1d4ed8', fill: 'rgba(29,78,216,0.06)' },
+  { label: 'Glencore',       color: '#7c3aed', fill: 'rgba(124,58,237,0.06)'}
+];
+const benchData = {
+  geo:      { aa:[52,48,45,62,56,42,48,55,45,40,56,64], bhp:[55,62,65,60,55,52,60,65,62,58,55,60], rio:[50,58,62,58,52,48,55,60,56,52,48,54], glen:[60,66,70,68,64,60,65,70,68,62,58,64] },
+  ops:      { aa:[40,38,32,55,45,72,65,50,45,78,72,62], bhp:[62,68,72,66,60,65,70,68,62,72,78,75], rio:[50,54,56,52,48,55,60,58,52,58,62,60], glen:[68,72,76,70,65,70,75,72,68,75,80,78] },
+  esg:      { aa:[55,50,42,60,52,48,42,38,52,50,45,55], bhp:[52,55,58,56,50,54,58,60,55,58,55,52], rio:[68,72,75,70,65,70,74,72,68,72,70,68], glen:[72,76,80,75,70,74,78,76,72,75,72,70] },
+  legal:    { aa:[38,42,38,50,46,42,40,45,50,45,42,48], bhp:[42,46,50,48,44,48,52,50,46,50,48,45], rio:[45,48,52,50,46,50,54,52,48,52,50,47], glen:[72,76,78,75,72,75,78,76,72,75,74,72] },
+  financial:{ aa:[48,42,38,55,50,44,46,52,50,52,50,58], bhp:[42,45,48,44,40,44,48,46,42,46,44,42], rio:[38,40,42,40,36,40,44,42,38,42,40,38], glen:[55,58,62,58,54,58,62,60,56,60,58,56] },
+  mna:      { aa:[65,62,58,70,68,65,60,55,68,65,72,78], bhp:[35,38,40,38,34,38,42,40,36,40,38,36], rio:[30,32,34,32,28,32,36,34,30,34,32,30], glen:[52,55,58,55,52,55,58,56,52,56,54,52] },
+  supply:   { aa:[38,40,38,45,42,40,38,42,44,40,38,42], bhp:[55,60,65,62,58,62,65,63,60,64,62,60], rio:[48,52,56,52,48,52,55,53,50,54,52,50], glen:[60,65,68,65,62,65,68,66,62,65,63,62] },
+  energy:   { aa:[45,48,50,48,44,48,52,50,46,50,48,46], bhp:[68,72,76,72,68,72,75,73,70,73,71,70], rio:[52,55,58,55,52,55,58,56,52,56,54,52], glen:[28,30,32,30,26,30,34,32,28,32,30,28] }
+};
+const benchKeys = ['aa','bhp','rio','glen'];
+let benchChartInst = null;
+
+function drawBenchChart() {
+  const canvas = document.getElementById('benchChart');
+  if (!canvas) return;
+  const cat = (document.getElementById('benchCatSelect') || {}).value || 'geo';
+  const catData = benchData[cat] || benchData.geo;
+  const datasets = benchOrgs.map(function(org, i) {
+    return {
+      label: org.label, data: catData[benchKeys[i]],
+      borderColor: org.color, backgroundColor: org.fill,
+      borderWidth: 2.5, pointRadius: 3, pointBackgroundColor: org.color,
+      tension: 0.3, fill: false
+    };
+  });
+  if (benchChartInst) { benchChartInst.destroy(); benchChartInst = null; }
+  benchChartInst = new Chart(document.getElementById('benchChart').getContext('2d'), {
+    type: 'line',
+    data: { labels: benchMonths, datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        y: { min: 15, max: 85, ticks: { font: { size: 10 }, maxTicksLimit: 6 }, grid: { color: '#f3f4f6' },
+             title: { display: true, text: 'External risk score', font: { size: 10 }, color: '#6b7280' } },
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+      }
+    }
+  });
+}
+
+window.addEventListener('resize', () => {
+  if (document.getElementById('page-benchmark').classList.contains('active')) drawBenchChart();
+});
+window.addEventListener('load', () => showPage('detect'));
+</script>
+</body>
+</html>
