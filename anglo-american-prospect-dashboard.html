@@ -1,0 +1,2544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+(function() {
+    var root = document.documentElement;
+    root.style.setProperty('--magenta', '#C8102E');
+    root.style.setProperty('--magenta-soft', 'rgba(200,16,46,0.12)');
+    root.style.setProperty('--navy', '#1a1a2e');
+    root.style.setProperty('--navy-soft', 'rgba(26,26,46,0.10)');
+})();
+</script>
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>External Risk Intelligence Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --magenta: #d1315b;
+    --magenta-soft: rgba(209,49,91,0.14);
+    --navy: #2a3b6e;
+    --navy-soft: rgba(42,59,110,0.12);
+    --blue: #3a6df0;
+    --text: #1a1f36;
+    --text-soft: #2d3557;
+    --muted: #6b7280;
+    --border: #e3e6ef;
+    --surface: #ffffff;
+    --surface-2: #f1f3f9;
+    --bg: #f6f7fb;
+    --red: #dc2626;
+    --amber: #d97706;
+    --green: #059669;
+    --blue-rag: #2563eb;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; }
+  .wrap { max-width: 1400px; margin: 0 auto; padding: 20px 24px 60px; }
+  header.hero {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px; background: var(--surface); border: 1px solid var(--border);
+    border-bottom: 3px solid var(--magenta); border-radius: 10px; margin-bottom: 24px;
+  }
+  .brandmark { display: flex; align-items: center; gap: 14px; }
+  .brand-glyph {
+    width: 34px; height: 34px; background: var(--magenta);
+    display: inline-block; border-radius: 6px; position: relative;
+  }
+  .brand-glyph::after {
+    content: ""; position: absolute; top: 10px; left: 10px; width: 14px; height: 14px;
+    background: white; border-radius: 2px;
+  }
+  .brand-text .kicker {
+    color: var(--magenta); font-size: 10px; font-weight: 700; letter-spacing: 2px;
+  }
+  .brand-text h1 {
+    color: var(--navy); font-size: 22px; font-weight: 700; margin: 4px 0 0; line-height: 1.2;
+  }
+  .brand-text .sub {
+    color: var(--muted); font-size: 12px; margin-top: 6px;
+  }
+  .gen-date { font-size: 12px; color: var(--muted); text-align: right; }
+
+  section.card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px 24px; margin-bottom: 22px;
+  }
+  section.card h2 {
+    font-size: 14px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--navy);
+    margin: 0 0 16px; font-weight: 700;
+  }
+  section.card h2 .note {
+    font-size: 11px; font-weight: 400; color: var(--muted); text-transform: none; letter-spacing: 0;
+    margin-left: 8px;
+  }
+
+  /* Hero exec */
+  .hero-chart-wrap { position: relative; height: 340px; margin-bottom: 20px; }
+  .hero-para {
+    border-left: 3px solid var(--navy); background: var(--navy-soft);
+    padding: 14px 18px; margin: 0 0 20px; color: var(--text-soft);
+    font-size: 14px; line-height: 1.6;
+  }
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+  }
+  .stat {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .stat .val { font-size: 28px; font-weight: 700; color: var(--navy); line-height: 1.1; }
+  .stat .label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; }
+  .stat .sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+  /* Pillars grid */
+  .pillar-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
+  @media (max-width: 900px) { .pillar-grid { grid-template-columns: 1fr; } }
+  .pillar-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .pillar-card h3 { font-size: 13px; color: var(--navy); margin: 0 0 6px; font-weight: 600; }
+  .pillar-card .desc { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+  .pillar-ri-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; }
+  .pillar-ri-big { font-size: 34px; font-weight: 700; line-height: 1; }
+  .pillar-ri-big.RED { color: var(--red); }
+  .pillar-ri-big.AMBER { color: var(--amber); }
+  .pillar-ri-big.GREEN { color: var(--green); }
+  .pillar-ri-fc { font-size: 15px; color: var(--muted); }
+  .pillar-spark-wrap { height: 90px; margin: 8px 0 12px; }
+  .pill-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; align-items: center; }
+  .pill {
+    display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: 0.6px;
+    padding: 3px 8px; border-radius: 10px; text-transform: uppercase;
+  }
+  .pill.RED { background: #fee2e2; color: var(--red); }
+  .pill.AMBER { background: #fef3c7; color: var(--amber); }
+  .pill.GREEN { background: #d1fae5; color: var(--green); }
+  .pill.OPP { background: #dbeafe; color: var(--blue-rag); border: 1px solid var(--blue-rag); }
+  .pill.dir { background: var(--surface-2); color: var(--text-soft); }
+  .pill.posture { border: 1px solid; background: transparent; }
+  .pill.posture.DISCUSSNOW { border-color: var(--red); color: var(--red); }
+  .pill.posture.MONITOR { border-color: var(--amber); color: var(--amber); }
+  .pill.posture.HOLD { background: var(--surface-2); border-color: var(--border); color: var(--muted); }
+  .pill.posture.OPPORTUNITY { border-color: var(--blue-rag); color: var(--blue-rag); }
+  .pill.thin { background: var(--surface-2); color: var(--muted); font-weight: 500; }
+  .pillar-block { margin: 12px 0; }
+  .pillar-block .bhead {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .pillar-block ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--text-soft); }
+  .pillar-block li { margin: 3px 0; }
+  .pillar-aims .bhead { color: var(--green); }
+  .pillar-aims li::marker { color: var(--green); }
+  .pillar-risks .bhead { color: var(--red); }
+  .pillar-risks li::marker { color: var(--red); }
+  .pillar-cs {
+    padding: 10px 12px; border-radius: 6px; border: 1px solid; margin: 10px 0;
+  }
+  .pillar-cs.headwind { background: #fff7ed; border-color: #fed7aa; }
+  .pillar-cs.tailwind { background: #eff6ff; border-color: #bfdbfe; }
+  .pillar-cs .bhead { font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 4px; }
+  .pillar-cs.headwind .bhead { color: #c2410c; }
+  .pillar-cs.tailwind .bhead { color: #1d4ed8; }
+  .pillar-cs .body { font-size: 12.5px; color: var(--text-soft); line-height: 1.5; }
+  .pillar-cs.sparse { background: transparent; border-style: dashed; }
+  .pillar-cs.sparse .body { font-style: italic; color: var(--muted); }
+  .pillar-evidence { font-size: 11.5px; color: var(--muted); margin-top: 10px; }
+  .pillar-evidence .ev { margin: 3px 0; color: var(--text-soft); }
+
+  /* Peer benchmark heatmap */
+  .heatmap {
+    border-collapse: collapse; width: 100%; font-size: 12px;
+  }
+  .heatmap th, .heatmap td {
+    padding: 6px 8px; text-align: center; border: 1px solid var(--border);
+  }
+  .heatmap th.vert {
+    writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap;
+    font-weight: 600; color: var(--navy); background: var(--surface-2);
+    padding: 10px 4px; min-height: 130px;
+  }
+  .heatmap td.name { text-align: left; font-weight: 600; padding: 8px 10px; color: var(--navy); background: var(--surface-2); }
+  .heatmap tr.focal td.name { background: var(--magenta-soft); }
+  .heatmap tr.focal td.name .focal-pill { margin-left: 6px; font-size: 9px; background: var(--blue-rag); color: white; padding: 2px 6px; border-radius: 10px; font-weight: 600; letter-spacing: 0.5px; }
+  .heatmap td.total { background: var(--surface-2); font-weight: 600; color: var(--muted); }
+  .heatmap-intro { font-size: 12px; font-style: italic; color: var(--muted); margin-bottom: 12px; }
+
+  /* Driver table */
+  .driver-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .driver-table th { text-align: left; font-weight: 600; color: var(--navy); background: var(--surface-2); padding: 8px 10px; border-bottom: 2px solid var(--border); }
+  .driver-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .driver-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .ch-red { color: var(--red); font-weight: 600; }
+  .ch-green { color: var(--green); font-weight: 600; }
+
+  /* Deep dive dropdown */
+  .dd-row { display: flex; gap: 16px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+  select.driver-select {
+    font-size: 13px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;
+    background: var(--surface); color: var(--navy); min-width: 240px;
+  }
+  .dd-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .dd-grid { grid-template-columns: 1fr; } }
+  .dd-card {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .dd-card h4 { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 10px; color: var(--navy); }
+  .dd-chart-wrap { height: 240px; }
+  .dd-headlines { font-size: 12px; max-height: 240px; overflow-y: auto; }
+  .dd-headlines .hd { margin: 6px 0; padding: 6px 8px; background: var(--surface); border-radius: 5px; border: 1px solid var(--border); }
+  .dd-meta { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .tag { font-size: 10px; padding: 3px 8px; background: var(--surface-2); color: var(--muted); border-radius: 10px; }
+
+  /* Scatter */
+  .scatter-wrap { position: relative; height: 500px; }
+
+  /* Accordions */
+  .acc { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; overflow: hidden; }
+  .acc-head { padding: 10px 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; background: var(--surface); }
+  .acc-head:hover { background: var(--surface-2); }
+  .acc-head .name { font-weight: 600; color: var(--navy); }
+  .acc-head .arrow { margin-left: auto; color: var(--muted); transition: transform 0.15s; }
+  .acc.open .acc-head .arrow { transform: rotate(90deg); }
+  .acc-body { display: none; padding: 8px 14px 14px; background: var(--surface); border-top: 1px solid var(--border); }
+  .acc.open .acc-body { display: block; }
+  .hd { margin: 4px 0; font-size: 12.5px; color: var(--text-soft); padding: 6px 0; border-bottom: 1px dashed var(--border); }
+  .hd .meta { font-size: 10px; color: var(--muted); }
+
+  /* Value-add section */
+  .glp1-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 18px; }
+  @media (max-width: 900px) { .glp1-grid { grid-template-columns: 1fr; } }
+  .glp1-volume { position: relative; height: 260px; }
+  .theme-list { display: flex; flex-direction: column; gap: 8px; }
+  .theme-item {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 14px;
+  }
+  .theme-item .name { font-size: 12px; font-weight: 600; color: var(--navy); }
+  .theme-item .count { float: right; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .theme-item .bar {
+    height: 5px; background: var(--border); border-radius: 3px; margin-top: 6px;
+  }
+  .theme-item .bar-fill { height: 5px; background: var(--magenta); border-radius: 3px; }
+  .glp1-context {
+    background: var(--navy-soft); border-left: 3px solid var(--navy);
+    padding: 14px 18px; margin: 18px 0; font-size: 13px; color: var(--text-soft); line-height: 1.6;
+  }
+  .glp1-samples { margin-top: 14px; }
+  .glp1-samples h4 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--navy); margin: 12px 0 6px; }
+  .glp1-sample { font-size: 12px; color: var(--text-soft); margin: 4px 0; padding: 4px 8px; background: var(--surface-2); border-radius: 4px; }
+
+  /* Footer */
+  footer { font-size: 11px; color: var(--muted); margin-top: 30px; text-align: center; }
+
+  /* Legend */
+  .legend-row { display: flex; gap: 14px; flex-wrap: wrap; font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .legend-row .lg { display: inline-flex; align-items: center; gap: 4px; }
+  .lg .dot { display: inline-block; width: 14px; height: 3px; border-radius: 1px; }
+
+  /* Outlook */
+  .outlook-para {
+    border-left: 3px solid var(--magenta); background: var(--magenta-soft);
+    padding: 14px 18px; margin: 0; color: var(--text-soft); font-size: 13.5px; line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div class="brandmark">
+    <span class="brand-glyph"></span>
+    <div class="brand-text">
+      <div class="kicker">POLECAT RISK INTELLIGENCE</div>
+      <h1 id="hdr-company">International Flavors &amp; Fragrances External Risk Intelligence Dashboard</h1>
+      <div class="sub" id="hdr-sub">Analysis period: ... Taxonomy: Risk. Peers: Givaudan, DSM-Firmenich, Symrise, Kerry Group.</div>
+    </div>
+  </div>
+  <div class="gen-date" id="hdr-date">Generated: ...</div>
+</header>
+
+<!-- EXEC HERO -->
+<section class="card">
+  <h2>EXECUTIVE SUMMARY</h2>
+  <div class="hero-chart-wrap"><canvas id="heroChart"></canvas></div>
+  <p class="hero-para" id="hero-para"></p>
+  <div class="stats-row" id="stats-row"></div>
+</section>
+
+<!-- STRATEGIC PILLARS -->
+<section class="card">
+  <h2>STRATEGIC PILLAR RISK OUTLOOK
+    <span class="note" id="pillar-note"></span>
+  </h2>
+  <div class="legend-row">
+    <span class="lg"><span class="dot" style="background: var(--navy)"></span> History</span>
+    <span class="lg"><span class="dot" style="background: var(--magenta); opacity: 0.7; border-top: 1px dashed var(--magenta);"></span> Base case</span>
+    <span class="lg"><span class="dot" style="background: var(--red); opacity: 0.7;"></span> Worst case</span>
+    <span class="lg"><span class="dot" style="background: var(--green); opacity: 0.7;"></span> Best case</span>
+  </div>
+  <div class="pillar-grid" id="pillar-grid"></div>
+</section>
+
+<!-- PEER BENCHMARK -->
+<section class="card">
+  <h2>PEER BENCHMARK / TAXONOMY DRIVER HEATMAP</h2>
+  <p class="heatmap-intro">
+    Rows show each entity's share of event volume attributed to each risk driver, normalised to that entity's total.
+    Absolute volumes differ materially across peers, so raw counts would make the focal company look artificially
+    quiet. Row-normalisation reveals the shape of exposure on a like-for-like basis.
+  </p>
+  <div style="overflow-x: auto;">
+    <table class="heatmap" id="heatmap-table"></table>
+  </div>
+</section>
+
+<!-- RISK DRIVER STATUS -->
+<section class="card">
+  <h2>RISK DRIVER STATUS</h2>
+  <table class="driver-table" id="driver-table">
+    <thead>
+      <tr>
+        <th>Driver</th>
+        <th class="num">Risk Index</th>
+        <th class="num">3m change</th>
+        <th class="num">Events / mo (avg)</th>
+        <th class="num">Concerning %</th>
+        <th>Status</th>
+        <th>Direction</th>
+        <th>Posture</th>
+      </tr>
+    </thead>
+    <tbody id="driver-tbody"></tbody>
+  </table>
+  <p class="heatmap-intro" id="classification-note" style="margin-top: 14px;"></p>
+</section>
+
+<!-- DRIVER DEEP DIVE -->
+<section class="card">
+  <h2>DRIVER DEEP DIVE</h2>
+  <div class="dd-row">
+    <label for="driver-select" style="font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px;">Driver:</label>
+    <select class="driver-select" id="driver-select"></select>
+  </div>
+  <div id="dd-meta" class="dd-meta"></div>
+  <div class="dd-grid">
+    <div class="dd-card">
+      <h4>Risk Index trend</h4>
+      <div class="dd-chart-wrap"><canvas id="ddChart"></canvas></div>
+    </div>
+    <div class="dd-card">
+      <h4>Recent events</h4>
+      <div class="dd-headlines" id="dd-headlines"></div>
+    </div>
+  </div>
+</section>
+
+<!-- SCATTER -->
+<section class="card" style="display:none">
+  <h2>RISK DRIVER POSITIONING</h2>
+  <div class="scatter-wrap"><canvas id="scatterChart"></canvas></div>
+</section>
+
+<!-- PROJECTION -->
+<section class="card" style="display:none">
+  <h2>TOP 3 DRIVERS / RISK INDEX PROJECTION</h2>
+  <div style="height: 320px; position: relative;"><canvas id="projChart"></canvas></div>
+</section>
+
+<!-- VALUE-ADD SECTION (generic; populated from DATA.value_add) -->
+<section id="value-add-section" class="card" style=" border: 1px solid var(--magenta); background: linear-gradient(180deg, #fff8f9 0%, var(--surface) 40%);">
+  <h2 style="color: var(--magenta);" id="value-add-title"></h2>
+  <p class="glp1-context" id="value-add-context"></p>
+  <div class="glp1-grid">
+    <div class="dd-card">
+      <h4 id="value-add-chart-title"></h4>
+      <div class="glp1-volume"><canvas id="valueAddChart"></canvas></div>
+      <p style="font-size: 11px; color: var(--muted); margin: 10px 0 0; font-style: italic;" id="value-add-chart-caption"></p>
+    </div>
+    <div>
+      <h4 style="font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--navy); margin: 0 0 10px;">Thematic distribution</h4>
+      <div class="theme-list" id="value-add-themes"></div>
+    </div>
+  </div>
+  <div class="glp1-samples" id="value-add-samples"></div>
+</section>
+
+<!-- RECENT EVENTS ACCORDIONS -->
+<section class="card">
+  <h2>RECENT EVENTS BY DRIVER</h2>
+  <div id="accordions"></div>
+</section>
+
+<!-- OUTLOOK -->
+<section class="card">
+  <h2>THREE-MONTH OUTLOOK</h2>
+  <p class="outlook-para" id="outlook-para"></p>
+</section>
+
+<footer id="footer"></footer>
+
+</div>
+
+<script>
+const DATA = {
+  "company": "Anglo American",
+  "generated": "9 Jun 2026",
+  "taxonomy": "Polecat Risk Taxonomy v3",
+  "period": {
+    "from": "Q3 2025",
+    "to": "Q2 2026"
+  },
+  "forecast_months": [
+    "Q3 2026",
+    "Q4 2026",
+    "Q1 2027"
+  ],
+  "pillar_methodology": {
+    "pillar_events": 229,
+    "total_events": 296,
+    "exclusion_pct": 23
+  },
+  "totals": {
+    "events": 296,
+    "drivers_elevated": 5,
+    "drivers_red": 2,
+    "drivers_total": 11
+  },
+  "commentary": {
+    "hero": "Anglo American's external risk score reached 55.2 in Q2 2026, tracking consistently below the mining sector average of 64.5 over the same period. The divergence reflects the portfolio simplification programme reducing exposure in higher-risk commodities such as coal, but simultaneously elevating Strategic Portfolio Risk and Geopolitical Risk as multiple concurrent divestments proceed across three continents. The forward signal is cautious: Geopolitical and Country Risk is projected to intensify through Q3 2026 as the De Beers transaction and Quellaveco social licence dynamics develop.",
+    "outlook": "The outlook over the next three quarters is shaped by three dynamics running in parallel. Portfolio Simplification is expected to sustain elevated Strategic Portfolio Risk through Q3 2026 as the De Beers, Australian coal and Brazil asset processes each reach critical decision points. Operational Excellence faces rising Geopolitical and Country Risk at Quellaveco in Peru, where a water contamination investigation could escalate to regulatory sanction if unaddressed. The Growth pillar benefits from positive Teck merger resolution and copper analyst upgrades, but the Woodsmith feasibility syndication timeline remains a key watch item for Q3 2026."
+  },
+  "classification_methodology": {
+    "note": "Risk Index derived from 296 event-level classifications over 9 months. Frequency (40%), Severity (35%), Momentum (25%). Quarterly RI derived from monthly PolecatX time series. Peer data from PolecatX entity tracking for BHP Group, Rio Tinto and Glencore."
+  },
+  "overall": {
+    "months": [
+      "Q3 2025",
+      "Q4 2025",
+      "Q1 2026",
+      "Q2 2026"
+    ],
+    "risk_index": [
+      47.0,
+      47.7,
+      51.8,
+      55.2
+    ],
+    "frequency": [
+      68,
+      62,
+      72,
+      83
+    ],
+    "severity": [
+      48.3,
+      47.1,
+      52.4,
+      56.8
+    ],
+    "pct_concerning": [
+      31.2,
+      34.5,
+      35.8,
+      38.2
+    ],
+    "forecast": {
+      "base": [
+        57.4,
+        58.9,
+        59.2
+      ],
+      "upper": [
+        62.1,
+        67.8,
+        73.4
+      ],
+      "worst": [
+        62.1,
+        67.8,
+        73.4
+      ],
+      "lower": [
+        53.2,
+        50.8,
+        48.6
+      ],
+      "best": [
+        53.2,
+        50.8,
+        48.6
+      ]
+    }
+  },
+  "peers": {
+    "enabled": true,
+    "names": [
+      "Anglo American",
+      "BHP Group",
+      "Rio Tinto",
+      "Glencore"
+    ],
+    "benchmark": {
+      "months": [
+        "Q3 2025",
+        "Q4 2025",
+        "Q1 2026",
+        "Q2 2026"
+      ],
+      "company": [
+        47.0,
+        47.7,
+        51.8,
+        55.2
+      ],
+      "peer_composite": [
+        55.76666666666667,
+        56.36666666666667,
+        60.5,
+        63.29999999999999
+      ],
+      "sector_benchmark": [
+        61.7,
+        54.3,
+        67.5,
+        64.5
+      ],
+      "peers": {
+        "BHP Group": [
+          54.2,
+          56.8,
+          60.1,
+          63.4
+        ],
+        "Rio Tinto": [
+          51.8,
+          53.4,
+          57.2,
+          59.8
+        ],
+        "Glencore": [
+          61.3,
+          58.9,
+          64.2,
+          66.7
+        ]
+      }
+    },
+    "heatmap_taxonomy": {
+      "columns": [
+        "Geo-Political",
+        "Operational",
+        "ESG & Community",
+        "Legal",
+        "Strategic M&A"
+      ],
+      "rows": [
+        {
+          "name": "Anglo American",
+          "raw": [
+            30,
+            25,
+            22,
+            8,
+            81
+          ],
+          "pct": [
+            78,
+            58,
+            52,
+            18,
+            90
+          ],
+          "total": 296,
+          "highlight": true
+        },
+        {
+          "name": "BHP Group",
+          "raw": [
+            88,
+            112,
+            64,
+            22,
+            18
+          ],
+          "pct": [
+            60,
+            75,
+            44,
+            15,
+            12
+          ],
+          "total": 387,
+          "highlight": false
+        },
+        {
+          "name": "Rio Tinto",
+          "raw": [
+            72,
+            68,
+            95,
+            30,
+            15
+          ],
+          "pct": [
+            55,
+            52,
+            72,
+            23,
+            11
+          ],
+          "total": 352,
+          "highlight": false
+        },
+        {
+          "name": "Glencore",
+          "raw": [
+            95,
+            108,
+            88,
+            78,
+            42
+          ],
+          "pct": [
+            58,
+            66,
+            54,
+            48,
+            26
+          ],
+          "total": 428,
+          "highlight": false
+        }
+      ]
+    }
+  },
+  "pillars": [
+    {
+      "name": "Operational Excellence",
+      "description": "Safety-first production delivery, cost discipline, mine plan execution and technology deployment across world-class assets.",
+      "ri": 52.4,
+      "rag": "AMBER",
+      "direction": "Watch",
+      "posture": "MONITOR",
+      "total_events": 82,
+      "thin_sample": false,
+      "strategic_aims": [
+        "Are social licence and environmental compliance risks at Quellaveco visible before they become operational disruptions?",
+        "Does Woodsmith production ramp-up face regulatory or planning risks that could affect the feasibility syndication timeline?",
+        "What external signals indicate emerging safety or labour market pressure at key operating sites?"
+      ],
+      "external_risks": [
+        "Quellaveco water contamination investigation published May 2026 - 31 sources, social licence risk escalating.",
+        "Woodsmith production limit application in progress - regulatory approval outstanding with cost overrun narrative active.",
+        "Record low injury rate achieved Q1 2026 but two worker fatalities create reputational exposure if investigation follows."
+      ],
+      "competitive_signal": {
+        "kind": "headwind",
+        "label": "Social licence risk rising at flagship copper asset",
+        "body": "The Quellaveco water investigation creates a specific operational excellence risk that peers BHP and Rio Tinto do not face at their copper assets. If regulatory sanction follows, it directly disrupts the copper production ramp-up underpinning the Growth pillar."
+      },
+      "timeseries": {
+        "months": [
+          "Q3 2025",
+          "Q4 2025",
+          "Q1 2026",
+          "Q2 2026"
+        ],
+        "ri": [
+          44.1,
+          48.3,
+          51.8,
+          52.4
+        ],
+        "forecast_months": [
+          "Q3 2026",
+          "Q4 2026",
+          "Q1 2027"
+        ],
+        "forecast_base": [
+          55.1,
+          57.4,
+          58.9
+        ],
+        "forecast_upper": [
+          60.2,
+          65.1,
+          69.8
+        ],
+        "forecast_lower": [
+          50.8,
+          50.2,
+          49.1
+        ]
+      },
+      "headlines": [
+        {
+          "title": "Quellaveco copper mine linked to water scarcity and contamination in Moquegua region",
+          "source": "Reuters / CooperAccion",
+          "date": "2026-05-26"
+        },
+        {
+          "title": "Anglo American seeks to lift production limits at Woodsmith Mine for polyhalite extraction",
+          "source": "Mining Journal",
+          "date": "2026-06-01"
+        },
+        {
+          "title": "Anglo American achieves record low injury rate despite two worker fatalities",
+          "source": "S&P Global",
+          "date": "2026-03-03"
+        }
+      ]
+    },
+    {
+      "name": "Portfolio Simplification",
+      "description": "Radical simplification to a Copper and Premium Iron Ore focused business through disciplined divestment of non-core assets.",
+      "ri": 61.3,
+      "rag": "RED",
+      "direction": "Rising",
+      "posture": "DISCUSS NOW",
+      "total_events": 110,
+      "thin_sample": false,
+      "strategic_aims": [
+        "What signals indicate sovereign or regulatory intervention in the De Beers divestment process that could affect transaction terms?",
+        "Are competing bids for the Brazil and coal assets generating external pressure that could complicate transaction close?",
+        "How is the investor narrative around the overall simplification plan tracking against execution of individual divestments?"
+      ],
+      "external_risks": [
+        "Botswana courts UAE and Oman sovereign wealth for De Beers stake - 28 external signals in 30 days, escalating.",
+        "Empres-rio raises competing offer for Anglo American Brazil asset, adding complexity alongside coal sale.",
+        "$3.7bn writedown and executive bonus cancellation in Feb 2026 created reputational pressure on simplification narrative."
+      ],
+      "competitive_signal": {
+        "kind": "headwind",
+        "label": "Concurrent divestment complexity without peer precedent",
+        "body": "No mining peer is managing simultaneous large-scale divestments across diamonds (Botswana), steelmaking coal (Australia), iron ore (Brazil) and a crop nutrients greenfield at the same time. The external risk is not individual transaction failure but narrative coherence and management bandwidth perception."
+      },
+      "timeseries": {
+        "months": [
+          "Q3 2025",
+          "Q4 2025",
+          "Q1 2026",
+          "Q2 2026"
+        ],
+        "ri": [
+          52.1,
+          55.4,
+          58.8,
+          61.3
+        ],
+        "forecast_months": [
+          "Q3 2026",
+          "Q4 2026",
+          "Q1 2027"
+        ],
+        "forecast_base": [
+          63.8,
+          65.2,
+          62.4
+        ],
+        "forecast_upper": [
+          69.1,
+          74.8,
+          72.1
+        ],
+        "forecast_lower": [
+          58.2,
+          57.4,
+          54.8
+        ]
+      },
+      "headlines": [
+        {
+          "title": "Botswana seeks UAE and Oman investment to acquire stake in De Beers, impacting Anglo American",
+          "source": "Bloomberg / Gulf News",
+          "date": "2026-06-05"
+        },
+        {
+          "title": "Anglo American sells Australian steelmaking coal mines for up to $3.9 billion",
+          "source": "Financial Times",
+          "date": "2026-05-18"
+        },
+        {
+          "title": "Anglo American reports a $3.7 billion loss due to significant writedowns",
+          "source": "Reuters",
+          "date": "2026-02-20"
+        }
+      ]
+    },
+    {
+      "name": "Growth",
+      "description": "Value-accretive organic and inorganic growth in Copper, Premium Iron Ore and Crop Nutrients, aligned with energy transition and food security demand.",
+      "ri": 48.6,
+      "rag": "GREEN",
+      "direction": "Stable",
+      "posture": "HOLD",
+      "total_events": 96,
+      "thin_sample": false,
+      "strategic_aims": [
+        "Do environmental permitting or antitrust signals for Codelco-Anglo copper infrastructure indicate timeline risk to Los Bronces growth?",
+        "Is the Woodsmith feasibility and syndication timeline secure against planning and regulatory headwinds?",
+        "What signals indicate whether Anglo American is winning or losing the copper growth narrative relative to BHP and Rio Tinto?"
+      ],
+      "external_risks": [
+        "Teck merger shareholder approval confirmed Apr 2026 - copper target price raised to 4,500p, positive growth momentum.",
+        "Anglo American and Codelco seeking separate environmental approvals for shared copper infrastructure - timeline risk.",
+        "Woodsmith feasibility positive: unanimous shareholder support for redesign, Fluor contracted for feasibility study."
+      ],
+      "competitive_signal": {
+        "kind": "tailwind",
+        "label": "Copper growth thesis endorsed by analysts and shareholders",
+        "body": "The Teck merger approval and analyst upgrades position Anglo American as a preferred copper play among diversified miners. The risk is execution: if Quellaveco social licence or Los Bronces permitting create gaps between the copper growth narrative and operational delivery, investor confidence could erode."
+      },
+      "timeseries": {
+        "months": [
+          "Q3 2025",
+          "Q4 2025",
+          "Q1 2026",
+          "Q2 2026"
+        ],
+        "ri": [
+          46.2,
+          44.8,
+          47.3,
+          48.6
+        ],
+        "forecast_months": [
+          "Q3 2026",
+          "Q4 2026",
+          "Q1 2027"
+        ],
+        "forecast_base": [
+          49.8,
+          51.2,
+          50.4
+        ],
+        "forecast_upper": [
+          54.1,
+          58.8,
+          62.4
+        ],
+        "forecast_lower": [
+          45.2,
+          44.1,
+          42.8
+        ]
+      },
+      "headlines": [
+        {
+          "title": "Anglo American shareholders support merger with Teck at AGM - copper target raised to 4500p",
+          "source": "Reuters",
+          "date": "2026-04-29"
+        },
+        {
+          "title": "Anglo American and Codelco seek separate environmental approvals for shared copper project",
+          "source": "Mining.com",
+          "date": "2026-04-16"
+        },
+        {
+          "title": "Fluor awarded feasibility study contracts for Anglo American's Woodsmith Mining Project",
+          "source": "S&P Global",
+          "date": "2026-05-07"
+        }
+      ]
+    }
+  ],
+  "themes": [
+    {
+      "name": "Geopolitical & Country Risk",
+      "current_ri": 62.4,
+      "current_severity": 63.8,
+      "change_3m": 8.6,
+      "rag": "RED",
+      "direction": "Rising",
+      "posture": "DISCUSS NOW",
+      "total_events": 30,
+      "pct_concerning": 56.7,
+      "no_data": false,
+      "thin_sample": false,
+      "history": {
+        "months": [
+          "Q3 2025",
+          "Q4 2025",
+          "Q1 2026",
+          "Q2 2026"
+        ],
+        "risk_index": [
+          44.8,
+          48.2,
+          56.1,
+          62.4
+        ]
+      },
+      "forecast": {
+        "base": [
+          65.2,
+          67.8,
+          68.4
+        ],
+        "worst": [
+          70.1,
+          74.2,
+          75.8
+        ],
+        "best": [
+          60.4,
+          62.1,
+          62.8
+        ]
+      },
+      "headlines": [
+        {
+          "title": "Botswana courts Gulf sovereign wealth for De Beers stake as bid deadline approaches",
+          "source": "Bloomberg",
+          "date": "2026-06-05"
+        },
+        {
+          "title": "Anglo American faces pressure to relocate HQ to Canada for Teck merger approval",
+          "source": "Financial Times",
+          "date": "2025-09-15"
+        },
+        {
+          "title": "EU investigates China-backed bid for Anglo American nickel mines over national security concerns",
+          "source": "Reuters",
+          "date": "2025-11-04"
+        }
+      ]
+    },
+    {
+      "name": "Strategic Portfolio Risk",
+      "current_ri": 64.8,
+      "current_severity": 61.4,
+      "change_3m": 7.2,
+      "rag": "RED",
+      "direction": "Rising",
+      "posture": "DISCUSS NOW",
+      "total_events": 81,
+      "pct_concerning": 44.4,
+      "no_data": false,
+      "thin_sample": false,
+      "history": {
+        "months": [
+          "Q3 2025",
+          "Q4 2025",
+          "Q1 2026",
+          "Q2 2026"
+        ],
+        "risk_index": [
+          51.2,
+          54.8,
+          58.9,
+          64.8
+        ]
+      },
+      "forecast": {
+        "base": [
+          66.4,
+          67.8,
+          65.2
+        ],
+        "worst": [
+          72.1,
+          76.4,
+          74.8
+        ],
+        "best": [
+          61.2,
+          60.8,
+          58.4
+        ]
+      },
+      "headlines": [
+        {
+          "title": "Anglo American confirms $3.7 billion loss from writedowns as restructuring continues",
+          "source": "Reuters",
+          "date": "2026-02-20"
+        },
+        {
+          "title": "Empres-rio raises competing offer for Anglo American asset in Brazil",
+          "source": "Mining Weekly",
+          "date": "2026-04-28"
+        },
+        {
+          "title": "Anglo American to delist from Swiss Exchange amid simplification programme",
+          "source": "Financial Times",
+          "date": "2026-03-23"
+        },
+        {
+          "title": "Anglo American exits coal reshapes Queensland's metallurgical coal sector",
+          "source": "S&P Global",
+          "date": "2026-06-09"
+        },
+        {
+          "title": "De Beers bid deadline approaches as Botswana pushes for control",
+          "source": "Reuters",
+          "date": "2026-04-10"
+        }
+      ]
+    },
+    {
+      "name": "Operational Risk",
+      "current_ri": 56.8,
+      "current_severity": 54.2,
+      "change_3m": 4.2,
+      "rag": "AMBER",
+      "direction": "Watch",
+      "posture": "MONITOR",
+      "total_events": 25,
+      "pct_concerning": 48.0,
+      "no_data": false,
+      "thin_sample": false,
+      "history": {
+        "months": [
+          "Q3 2025",
+          "Q4 2025",
+          "Q1 2026",
+          "Q2 2026"
+        ],
+        "risk_index": [
+          42.1,
+          58.4,
+          50.2,
+          56.8
+        ]
+      },
+      "forecast": {
+        "base": [
+          58.4,
+          60.2,
+          59.8
+        ],
+        "worst": [
+          64.8,
+          68.4,
+          72.1
+        ],
+        "best": [
+          53.8,
+          52.4,
+          51.2
+        ]
+      },
+      "headlines": [
+        {
+          "title": "Anglo American confirms cumulative Woodsmith spend at GBP2.7bn as production limit application lodged",
+          "source": "Mining Journal",
+          "date": "2026-05-21"
+        },
+        {
+          "title": "Anglo American cuts over 200 jobs in Queensland amid coal market slump",
+          "source": "Reuters",
+          "date": "2025-09-17"
+        },
+        {
+          "title": "Peabody Energy cancels $3.8bn coal deal with Anglo American after a mine fire",
+          "source": "S&P Global",
+          "date": "2025-08-19"
+        },
+        {
+          "title": "Anglo American maintains steady copper output as Teck merger approaches",
+          "source": "Reuters",
+          "date": "2026-04-28"
+        },
+        {
+          "title": "Anglo American reports steady Q1 production and maintains full-year guidance",
+          "source": "Anglo American IR",
+          "date": "2026-04-28"
+        }
+      ]
+    },
+    {
+      "name": "Reputational Risk",
+      "current_ri": 48.2,
+      "current_severity": 46.8,
+      "change_3m": 3.1,
+      "rag": "AMBER",
+      "direction": "Watch",
+      "posture": "MONITOR",
+      "total_events": 53,
+      "pct_concerning": 45.3,
+      "no_data": false,
+      "thin_sample": false,
+      "history": {
+        "months": [
+          "Q3 2025",
+          "Q4 2025",
+          "Q1 2026",
+          "Q2 2026"
+        ],
+        "risk_index": [
+          42.8,
+          40.1,
+          46.8,
+          48.2
+        ]
+      },
+      "forecast": {
+        "base": [
+          50.1,
+          51.4,
+          51.8
+        ],
+        "worst": [
+          56.4,
+          60.2,
+          62.8
+        ],
+        "best": [
+          45.8,
+          44.2,
+          43.4
+        ]
+      },
+      "headlines": [
+        {
+          "title": "Investigation finds Peru's Quellaveco mine tied to water scarcity and contamination",
+          "source": "CooperAccion / Reuters",
+          "date": "2026-05-26"
+        },
+        {
+          "title": "Anglo American faces class action appeals over alleged lead poisoning near Kabwe mine",
+          "source": "Reuters",
+          "date": "2025-11-03"
+        },
+        {
+          "title": "Anglo American cancels executive bonuses amid shareholder pressure",
+          "source": "Financial Times",
+          "date": "2025-12-08"
+        },
+        {
+          "title": "Anglo American slides on Wednesday, underperforming the market",
+          "source": "Bloomberg Markets",
+          "date": "2026-06-03"
+        },
+        {
+          "title": "FTSE 100 round-up: Anglo American outperforms market on copper momentum",
+          "source": "Financial Times",
+          "date": "2026-06-04"
+        }
+      ]
+    },
+    {
+      "name": "Financial Risk",
+      "current_ri": 51.4,
+      "current_severity": 50.2,
+      "change_3m": 2.8,
+      "rag": "AMBER",
+      "direction": "Stable",
+      "posture": "MONITOR",
+      "total_events": 29,
+      "pct_concerning": 41.4,
+      "no_data": false,
+      "thin_sample": false,
+      "history": {
+        "months": [
+          "Q3 2025",
+          "Q4 2025",
+          "Q1 2026",
+          "Q2 2026"
+        ],
+        "risk_index": [
+          35.8,
+          46.2,
+          52.1,
+          51.4
+        ]
+      },
+      "forecast": {
+        "base": [
+          52.8,
+          53.4,
+          52.8
+        ],
+        "worst": [
+          58.4,
+          62.1,
+          66.4
+        ],
+        "best": [
+          48.4,
+          46.8,
+          45.2
+        ]
+      },
+      "headlines": [
+        {
+          "title": "Anglo American reports $1.9bn loss and cuts dividend amid ongoing restructuring",
+          "source": "Bloomberg",
+          "date": "2025-07-31"
+        },
+        {
+          "title": "Mining stocks slide as surging dollar and copper price slump impact Anglo American",
+          "source": "Reuters",
+          "date": "2026-03-09"
+        },
+        {
+          "title": "Anglo American target price increased to 4,500p following copper merger progress",
+          "source": "S&P Global Market Intelligence",
+          "date": "2026-06-03"
+        },
+        {
+          "title": "Analysis of how the Anglo American story is shifting as analysts adjust valuation targets",
+          "source": "Bloomberg Intelligence",
+          "date": "2026-06-04"
+        },
+        {
+          "title": "Anglo American is identified as a great momentum stock: should you buy?",
+          "source": "Motley Fool",
+          "date": "2026-06-02"
+        }
+      ]
+    },
+    {
+      "name": "ESG & Social Licence",
+      "current_ri": 44.6,
+      "current_severity": 42.1,
+      "change_3m": -4.2,
+      "rag": "GREEN",
+      "direction": "Decreasing",
+      "posture": "HOLD",
+      "total_events": 22,
+      "pct_concerning": 31.8,
+      "no_data": false,
+      "thin_sample": false,
+      "history": {
+        "months": [
+          "Q3 2025",
+          "Q4 2025",
+          "Q1 2026",
+          "Q2 2026"
+        ],
+        "risk_index": [
+          54.2,
+          50.8,
+          48.1,
+          44.6
+        ]
+      },
+      "forecast": {
+        "base": [
+          42.8,
+          41.4,
+          40.2
+        ],
+        "worst": [
+          48.4,
+          50.2,
+          52.8
+        ],
+        "best": [
+          38.4,
+          36.8,
+          35.2
+        ]
+      },
+      "headlines": [
+        {
+          "title": "Anglo American's coal exit reshapes Queensland's metallurgical coal sector",
+          "source": "S&P Global",
+          "date": "2026-06-09"
+        },
+        {
+          "title": "Anglo American achieves record low injury rate as safety programme delivers",
+          "source": "Mining Journal",
+          "date": "2026-03-03"
+        },
+        {
+          "title": "Brazil investigates Anglo American's $500m nickel sale amid regulatory scrutiny",
+          "source": "Reuters Brazil",
+          "date": "2025-09-03"
+        }
+      ]
+    },
+    {
+      "name": "Policy & Regulatory Risk",
+      "current_ri": 46.8,
+      "current_severity": 44.4,
+      "change_3m": 1.4,
+      "rag": "GREEN",
+      "direction": "Stable",
+      "posture": "HOLD",
+      "total_events": 30,
+      "pct_concerning": 36.7,
+      "no_data": false,
+      "thin_sample": false,
+      "history": {
+        "months": [
+          "Q3 2025",
+          "Q4 2025",
+          "Q1 2026",
+          "Q2 2026"
+        ],
+        "risk_index": [
+          44.2,
+          46.8,
+          42.4,
+          46.8
+        ]
+      },
+      "forecast": {
+        "base": [
+          47.4,
+          48.2,
+          47.8
+        ],
+        "worst": [
+          52.8,
+          56.4,
+          58.2
+        ],
+        "best": [
+          42.4,
+          41.8,
+          41.2
+        ]
+      },
+      "headlines": [
+        {
+          "title": "Anglo American leads mining rebound amid geopolitical developments involving Trump and Iran",
+          "source": "Financial Times",
+          "date": "2026-05-06"
+        },
+        {
+          "title": "Anglo American and Codelco antitrust approval secured in Chile for joint copper plan",
+          "source": "Reuters",
+          "date": "2026-03-25"
+        },
+        {
+          "title": "Anglo American anticipates final Teck merger regulatory approval by Q3 2026",
+          "source": "Reuters",
+          "date": "2026-03-18"
+        },
+        {
+          "title": "Anglo American plans to delist from the Swiss Exchange amid restructuring",
+          "source": "Financial Times",
+          "date": "2026-03-23"
+        }
+      ]
+    },
+    {
+      "name": "Third-Party & Supplier Risk",
+      "current_ri": 38.4,
+      "current_severity": 38.8,
+      "change_3m": -2.1,
+      "rag": "GREEN",
+      "direction": "Decreasing",
+      "posture": "HOLD",
+      "total_events": 9,
+      "pct_concerning": 33.3,
+      "no_data": false,
+      "thin_sample": true,
+      "history": {
+        "months": [
+          "Q3 2025",
+          "Q4 2025",
+          "Q1 2026",
+          "Q2 2026"
+        ],
+        "risk_index": [
+          36.2,
+          42.8,
+          40.2,
+          38.4
+        ]
+      },
+      "forecast": {
+        "base": [
+          37.2,
+          36.4,
+          35.8
+        ],
+        "worst": [
+          42.8,
+          44.4,
+          46.2
+        ],
+        "best": [
+          33.4,
+          31.8,
+          30.4
+        ]
+      },
+      "headlines": [
+        {
+          "title": "Botswana actively seeking competing investors to complicate De Beers sale process",
+          "source": "Bloomberg",
+          "date": "2026-06-05"
+        },
+        {
+          "title": "Turkish company Empres-rio raises offer for Anglo American's Brazil asset",
+          "source": "Mining Weekly",
+          "date": "2026-04-28"
+        },
+        {
+          "title": "Fluor awarded feasibility study contracts for Woodsmith - execution risk reduced",
+          "source": "S&P Global",
+          "date": "2026-05-07"
+        }
+      ]
+    },
+    {
+      "name": "Workforce & Labour Risk",
+      "current_ri": 35.2,
+      "current_severity": 34.2,
+      "change_3m": -1.8,
+      "rag": "GREEN",
+      "direction": "Stable",
+      "posture": "HOLD",
+      "total_events": 8,
+      "pct_concerning": 25.0,
+      "no_data": false,
+      "thin_sample": true,
+      "history": {
+        "months": [
+          "Q3 2025",
+          "Q4 2025",
+          "Q1 2026",
+          "Q2 2026"
+        ],
+        "risk_index": [
+          38.4,
+          36.8,
+          36.4,
+          35.2
+        ]
+      },
+      "forecast": {
+        "base": [
+          35.0,
+          34.4,
+          34.0
+        ],
+        "worst": [
+          40.2,
+          42.4,
+          44.8
+        ],
+        "best": [
+          31.2,
+          29.8,
+          28.4
+        ]
+      },
+      "headlines": [
+        {
+          "title": "Anglo American cuts over 200 jobs in Queensland amid coal market slump and royalties dispute",
+          "source": "Reuters",
+          "date": "2025-09-17"
+        },
+        {
+          "title": "Anglo American cancels executive bonuses in response to shareholder pressure",
+          "source": "Financial Times",
+          "date": "2025-12-08"
+        },
+        {
+          "title": "Anglo American achieves record low injury rate across global operations",
+          "source": "Mining Journal",
+          "date": "2026-03-03"
+        }
+      ]
+    },
+    {
+      "name": "Legal & Compliance Risk",
+      "current_ri": 32.8,
+      "current_severity": 36.4,
+      "change_3m": -0.8,
+      "rag": "GREEN",
+      "direction": "Stable",
+      "posture": "HOLD",
+      "total_events": 2,
+      "pct_concerning": 50.0,
+      "no_data": false,
+      "thin_sample": true,
+      "history": {
+        "months": [
+          "Q3 2025",
+          "Q4 2025",
+          "Q1 2026",
+          "Q2 2026"
+        ],
+        "risk_index": [
+          30.4,
+          32.1,
+          33.8,
+          32.8
+        ]
+      },
+      "forecast": {
+        "base": [
+          32.4,
+          32.8,
+          33.2
+        ],
+        "worst": [
+          38.4,
+          42.1,
+          44.8
+        ],
+        "best": [
+          28.4,
+          27.2,
+          26.4
+        ]
+      },
+      "headlines": [
+        {
+          "title": "Anglo American faces class action appeals over alleged lead poisoning near Kabwe mine",
+          "source": "Reuters",
+          "date": "2025-11-03"
+        },
+        {
+          "title": "Anglo American anticompetitive practices - 15 controversy signals tracked by PolecatX",
+          "source": "PolecatX Controversy Monitor",
+          "date": "2026-06-01"
+        }
+      ]
+    },
+    {
+      "name": "Energy Transition Risk",
+      "current_ri": 29.4,
+      "current_severity": 28.8,
+      "change_3m": -3.2,
+      "rag": "GREEN",
+      "direction": "Decreasing",
+      "posture": "HOLD",
+      "total_events": 5,
+      "pct_concerning": 20.0,
+      "no_data": false,
+      "thin_sample": false,
+      "history": {
+        "months": [
+          "Q3 2025",
+          "Q4 2025",
+          "Q1 2026",
+          "Q2 2026"
+        ],
+        "risk_index": [
+          38.2,
+          34.4,
+          32.6,
+          29.4
+        ]
+      },
+      "forecast": {
+        "base": [
+          28.2,
+          27.4,
+          26.8
+        ],
+        "worst": [
+          34.2,
+          36.8,
+          40.4
+        ],
+        "best": [
+          24.8,
+          22.4,
+          20.8
+        ]
+      },
+      "headlines": [
+        {
+          "title": "Anglo American's coal exit removes major energy transition risk exposure",
+          "source": "S&P Global ESG",
+          "date": "2026-05-25"
+        },
+        {
+          "title": "Anglo American copper endowment positions company as energy transition beneficiary",
+          "source": "Financial Times",
+          "date": "2026-04-23"
+        },
+        {
+          "title": "Anglo American Woodsmith crop nutrients project supports food security narrative",
+          "source": "Mining Journal",
+          "date": "2026-06-03"
+        }
+      ]
+    }
+  ],
+  "scatter": [
+    {
+      "name": "Geopolitical & Country Risk",
+      "rag": "RED",
+      "posture": "DISCUSS NOW",
+      "current": {
+        "x": 30,
+        "y": 62.4,
+        "severity": 63.8
+      },
+      "projected": {
+        "x": 34,
+        "y": 65.2
+      }
+    },
+    {
+      "name": "Strategic Portfolio Risk",
+      "rag": "RED",
+      "posture": "DISCUSS NOW",
+      "current": {
+        "x": 81,
+        "y": 64.8,
+        "severity": 61.4
+      },
+      "projected": {
+        "x": 86,
+        "y": 66.4
+      }
+    },
+    {
+      "name": "Operational Risk",
+      "rag": "AMBER",
+      "posture": "MONITOR",
+      "current": {
+        "x": 25,
+        "y": 56.8,
+        "severity": 54.2
+      },
+      "projected": {
+        "x": 27,
+        "y": 58.4
+      }
+    },
+    {
+      "name": "Reputational Risk",
+      "rag": "AMBER",
+      "posture": "MONITOR",
+      "current": {
+        "x": 53,
+        "y": 48.2,
+        "severity": 46.8
+      },
+      "projected": {
+        "x": 56,
+        "y": 50.1
+      }
+    },
+    {
+      "name": "Financial Risk",
+      "rag": "AMBER",
+      "posture": "MONITOR",
+      "current": {
+        "x": 29,
+        "y": 51.4,
+        "severity": 50.2
+      },
+      "projected": {
+        "x": 30,
+        "y": 52.2
+      }
+    },
+    {
+      "name": "ESG & Social Licence",
+      "rag": "GREEN",
+      "posture": "HOLD",
+      "current": {
+        "x": 22,
+        "y": 44.6,
+        "severity": 42.1
+      },
+      "projected": {
+        "x": 20,
+        "y": 42.8
+      }
+    },
+    {
+      "name": "Policy & Regulatory Risk",
+      "rag": "GREEN",
+      "posture": "HOLD",
+      "current": {
+        "x": 30,
+        "y": 46.8,
+        "severity": 44.4
+      },
+      "projected": {
+        "x": 28,
+        "y": 47.2
+      }
+    },
+    {
+      "name": "Third-Party & Supplier Risk",
+      "rag": "GREEN",
+      "posture": "HOLD",
+      "current": {
+        "x": 9,
+        "y": 38.4,
+        "severity": 38.8
+      },
+      "projected": {
+        "x": 8,
+        "y": 36.8
+      }
+    },
+    {
+      "name": "Workforce & Labour Risk",
+      "rag": "GREEN",
+      "posture": "HOLD",
+      "current": {
+        "x": 8,
+        "y": 35.2,
+        "severity": 34.2
+      },
+      "projected": {
+        "x": 7,
+        "y": 34.8
+      }
+    },
+    {
+      "name": "Legal & Compliance Risk",
+      "rag": "GREEN",
+      "posture": "HOLD",
+      "current": {
+        "x": 2,
+        "y": 32.8,
+        "severity": 36.4
+      },
+      "projected": {
+        "x": 2,
+        "y": 33.2
+      }
+    },
+    {
+      "name": "Energy Transition Risk",
+      "rag": "GREEN",
+      "posture": "HOLD",
+      "current": {
+        "x": 5,
+        "y": 29.4,
+        "severity": 28.8
+      },
+      "projected": {
+        "x": 4,
+        "y": 27.8
+      }
+    }
+  ],
+  "value_add": {
+    "title": "EMERGING RISKS OUTSIDE THE CURRENT REGISTER",
+    "context": "Five external risk themes are building signal volume outside Anglo American's current taxonomy. Each represents an emerging pressure that could intersect with the three strategic pillars over the next 12 months. These signals are not yet material enough to sit in the primary register but are growing fast enough to warrant horizon attention from the risk team.",
+    "chart": {
+      "title": "Emerging risk signal volume by quarter",
+      "caption": "Indicative signal weight. Not PolecatX Risk Index scoring.",
+      "months": [
+        "Q3 2025",
+        "Q4 2025",
+        "Q1 2026",
+        "Q2 2026"
+      ],
+      "values": [
+        8,
+        14,
+        22,
+        34
+      ],
+      "series_label": "Emerging risk signals"
+    },
+    "theme_counts": {
+      "AI in Mining Operations": 34,
+      "Sovereign Wealth Asset Acquisition": 28,
+      "Critical Mineral Export Controls": 22,
+      "Water Stress Litigation": 18,
+      "Green Steel Supply Chain Pressure": 14
+    },
+    "sample_groups": [
+      {
+        "title": "AI in Mining Operations",
+        "samples": [
+          {
+            "title": "BHP and Rio Tinto accelerate autonomous haul truck deployment - competitive productivity gap widening",
+            "date": "2026-04-15"
+          },
+          {
+            "title": "Anglo American Woodsmith feasibility study incorporates AI-assisted geological modelling",
+            "date": "2026-05-07"
+          }
+        ],
+        "empty": "No signals captured."
+      },
+      {
+        "title": "Sovereign Wealth Asset Acquisition",
+        "samples": [
+          {
+            "title": "Gulf sovereign funds accelerate mining sector M&A activity post-2025 energy transition commitments",
+            "date": "2026-03-20"
+          },
+          {
+            "title": "Botswana De Beers sovereign stake signals broader African state asset retention trend",
+            "date": "2026-06-05"
+          }
+        ],
+        "empty": "No signals captured."
+      },
+      {
+        "title": "Critical Mineral Export Controls",
+        "samples": [
+          {
+            "title": "Chile and Peru legislators propose copper export licensing reform linked to processing requirements",
+            "date": "2026-02-18"
+          },
+          {
+            "title": "G7 critical minerals taskforce proposes ally-only supply chain certification for copper and lithium",
+            "date": "2026-04-22"
+          }
+        ],
+        "empty": "No signals captured."
+      },
+      {
+        "title": "Water Stress Litigation",
+        "samples": [
+          {
+            "title": "Quellaveco investigation opens pathway for community water rights litigation under Peruvian constitutional law",
+            "date": "2026-05-28"
+          },
+          {
+            "title": "South African water stress litigation against mining operators reaches Constitutional Court",
+            "date": "2026-01-14"
+          }
+        ],
+        "empty": "No signals captured."
+      },
+      {
+        "title": "Green Steel Supply Chain Pressure",
+        "samples": [
+          {
+            "title": "European steel manufacturers announce green steel procurement targets - premium iron ore demand signal rising",
+            "date": "2026-03-08"
+          },
+          {
+            "title": "Minas-Rio positioned as beneficiary of EU green steel supply chain premium pricing shift",
+            "date": "2026-04-10"
+          }
+        ],
+        "empty": "No signals captured."
+      }
+    ]
+  }
+};
+
+// Utility
+function pill(cls, text) { return '<span class="pill ' + cls + '">' + text + '</span>'; }
+function postureClass(p) {
+  return 'posture ' + p.replace(/\\s/g, '');
+}
+
+// --- Header ---
+document.getElementById('hdr-company').textContent = DATA.company + ' External Risk Intelligence Dashboard';
+document.getElementById('hdr-sub').textContent =
+  'Analysis period: ' + DATA.period.from + ' to ' + DATA.period.to +
+  '. Taxonomy: ' + DATA.taxonomy + '. Peers: ' + DATA.peers.names.slice(1).join(', ') + '.';
+document.getElementById('hdr-date').textContent = 'Generated: ' + DATA.generated;
+
+// --- Hero commentary ---
+document.getElementById('hero-para').textContent = DATA.commentary.hero;
+document.getElementById('outlook-para').textContent = DATA.commentary.outlook;
+document.getElementById('classification-note').textContent = DATA.classification_methodology.note;
+document.getElementById('pillar-note').textContent = DATA.pillar_methodology ?
+  ('Pillars derived from ' + DATA.pillar_methodology.pillar_events + ' of ' + DATA.pillar_methodology.total_events
+   + ' events (' + (100 - DATA.pillar_methodology.exclusion_pct) + '% mapped to pillars).') : '';
+
+// --- Stats row ---
+const statsRow = document.getElementById('stats-row');
+const curRI = DATA.overall.risk_index[DATA.overall.risk_index.length - 1];
+const avgRI = (DATA.overall.risk_index.reduce((a,b)=>a+b,0) / DATA.overall.risk_index.length).toFixed(1);
+const fcEnd = DATA.overall.forecast.base[DATA.overall.forecast.base.length - 1];
+const elev = DATA.totals.drivers_elevated;
+const red = DATA.totals.drivers_red;
+const events = DATA.totals.events;
+const months = DATA.overall.months.length;
+statsRow.innerHTML = [
+  ['Current RI', curRI.toFixed(1), 'Period avg ' + avgRI],
+  ['3m base forecast', fcEnd.toFixed(1), 'End ' + DATA.forecast_months[DATA.forecast_months.length-1]],
+  ['Drivers elevated', elev + ' / ' + DATA.totals.drivers_total, red + ' RED'],
+  ['Events analysed', events.toLocaleString(), months + ' month window'],
+].map(([label, val, sub]) =>
+  '<div class="stat"><div class="label">' + label + '</div><div class="val">' + val + '</div><div class="sub">' + sub + '</div></div>'
+).join('');
+
+// --- Hero composite chart ---
+(function buildHero() {
+  const ctx = document.getElementById('heroChart').getContext('2d');
+  const allMonths = DATA.overall.months.concat(DATA.forecast_months);
+  const histLen = DATA.overall.months.length;
+  const nulls = (n) => Array(n).fill(null);
+
+  const focalHist = DATA.overall.risk_index.concat(nulls(DATA.forecast_months.length));
+  const bridgeVal = DATA.overall.risk_index[histLen - 1];
+  const base = nulls(histLen - 1).concat([bridgeVal]).concat(DATA.overall.forecast.base);
+  const worst = nulls(histLen - 1).concat([bridgeVal]).concat(DATA.overall.forecast.worst);
+  const best = nulls(histLen - 1).concat([bridgeVal]).concat(DATA.overall.forecast.best);
+  const peer = DATA.peers.benchmark.peer_composite.concat(nulls(DATA.forecast_months.length));
+  const sector = DATA.peers.benchmark.sector_benchmark.concat(nulls(DATA.forecast_months.length));
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: allMonths,
+      datasets: [
+        { label: DATA.company + ' RI', data: focalHist, borderColor: '#d1315b', backgroundColor: 'rgba(209,49,91,0.14)', borderWidth: 2.5, fill: true, tension: 0.25, pointRadius: 2 },
+        { label: 'Base forecast', data: base, borderColor: '#d1315b', borderDash: [6, 4], borderWidth: 2, fill: false, pointRadius: 2 },
+        { label: 'Worst case', data: worst, borderColor: '#dc2626', borderDash: [4, 4], borderWidth: 1.5, fill: false, pointRadius: 0 },
+        { label: 'Best case', data: best, borderColor: '#059669', borderDash: [4, 4], borderWidth: 1.5, fill: false, pointRadius: 0 },
+        { label: 'Peer composite', data: peer, borderColor: '#2a3b6e', borderWidth: 1.5, fill: false, pointRadius: 0, tension: 0.25 },
+        { label: 'Sector benchmark', data: sector, borderColor: '#9ca3af', borderDash: [2, 2], borderWidth: 1.5, fill: false, pointRadius: 0, tension: 0.25 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom', labels: { boxWidth: 14, font: { size: 11 } } },
+        tooltip: {
+          callbacks: {
+            afterBody(items) {
+              const idx = items[0].dataIndex;
+              const focal = items.find(i => i.dataset.label === DATA.company + ' RI');
+              const peerI = items.find(i => i.dataset.label === 'Peer composite');
+              const sectorI = items.find(i => i.dataset.label === 'Sector benchmark');
+              const lines = [];
+              if (focal && peerI && focal.parsed.y !== null && peerI.parsed.y !== null) {
+                lines.push('Δ vs peer composite: ' + (focal.parsed.y - peerI.parsed.y >= 0 ? '+' : '') + (focal.parsed.y - peerI.parsed.y).toFixed(1));
+              }
+              if (focal && sectorI && focal.parsed.y !== null && sectorI.parsed.y !== null) {
+                lines.push('Δ vs sector benchmark: ' + (focal.parsed.y - sectorI.parsed.y >= 0 ? '+' : '') + (focal.parsed.y - sectorI.parsed.y).toFixed(1));
+              }
+              return lines;
+            }
+          }
+        }
+      },
+      scales: {
+        y: { beginAtZero: true, min: 0, max: 100, title: { display: true, text: 'Risk Index' } },
+        x: { grid: { display: false } },
+      }
+    }
+  });
+})();
+
+// --- Pillar cards ---
+(function buildPillars() {
+  const container = document.getElementById('pillar-grid');
+  if (!DATA.pillars || DATA.pillars.length === 0) { container.innerHTML = '<p class="muted">No pillars.</p>'; return; }
+  container.innerHTML = DATA.pillars.map((p, idx) => {
+    const fcEnd = p.timeseries.forecast_base[p.timeseries.forecast_base.length - 1];
+    const postureCls = postureClass(p.posture);
+    const dirPill = pill('dir', p.direction);
+    const postPill = pill(postureCls, p.posture);
+    const ragPill = pill(p.rag, p.rag);
+    const thinPill = p.thin_sample ? pill('thin', 'thin sample') : '';
+    const aims = (p.strategic_aims || []).map(a => '<li>' + a + '</li>').join('');
+    const risks = (p.external_risks || []).map(a => '<li>' + a + '</li>').join('');
+    const cs = p.competitive_signal || {};
+    let csHtml = '';
+    if (cs.kind) {
+      csHtml = '<div class="pillar-cs ' + cs.kind + '"><div class="bhead">' + (cs.label || '') +
+               '</div><div class="body">' + (cs.body || '') + '</div></div>';
+    } else {
+      csHtml = '<div class="pillar-cs sparse"><div class="body">No material competitive headwind or tailwind detected on this pillar in the current window.</div></div>';
+    }
+    const evidence = (p.headlines || []).slice(0, 2).map(h =>
+      '<div class="ev">, ' + h.title + ' <span style="color: var(--muted);">(' + h.date + ')</span></div>'
+    ).join('');
+    return (
+      '<div class="pillar-card">' +
+        '<div class="pill-row">' + ragPill + dirPill + postPill + thinPill + '</div>' +
+        '<h3>' + p.name + '</h3>' +
+        '<div class="desc">' + (p.description || '') + '</div>' +
+        '<div class="pillar-ri-row">' +
+          '<span class="pillar-ri-big ' + p.rag + '">' + p.ri.toFixed(1) + '</span>' +
+          '<span class="pillar-ri-fc">base 3m forecast ' + fcEnd.toFixed(1) + '</span>' +
+        '</div>' +
+        '<div class="pillar-spark-wrap"><canvas id="pillar-spark-' + idx + '"></canvas></div>' +
+        (aims ? '<div class="pillar-block pillar-aims"><div class="bhead">STRATEGIC AIMS</div><ul>' + aims + '</ul></div>' : '') +
+        (risks ? '<div class="pillar-block pillar-risks"><div class="bhead">EXTERNAL RISKS</div><ul>' + risks + '</ul></div>' : '') +
+        csHtml +
+        (evidence ? '<div class="pillar-evidence">' + evidence + '</div>' : '') +
+      '</div>'
+    );
+  }).join('');
+
+  // Render sparklines
+  DATA.pillars.forEach((p, idx) => {
+    const canvas = document.getElementById('pillar-spark-' + idx);
+    if (!canvas) return;
+    const hist = p.timeseries.ri;
+    const allMonths = p.timeseries.months.concat(p.timeseries.forecast_months);
+    const fillArr = hist.concat(Array(p.timeseries.forecast_months.length).fill(null));
+    const bridgeVal = hist[hist.length - 1];
+    const base = Array(hist.length - 1).fill(null).concat([bridgeVal]).concat(p.timeseries.forecast_base);
+    const worst = Array(hist.length - 1).fill(null).concat([bridgeVal]).concat(p.timeseries.forecast_upper);
+    const best = Array(hist.length - 1).fill(null).concat([bridgeVal]).concat(p.timeseries.forecast_lower);
+    new Chart(canvas.getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: allMonths,
+        datasets: [
+          { data: fillArr, borderColor: '#2a3b6e', backgroundColor: 'rgba(42,59,110,0.12)', borderWidth: 1.5, fill: true, pointRadius: 0, tension: 0.25 },
+          { data: base, borderColor: '#d1315b', borderDash: [5, 3], borderWidth: 1.5, fill: false, pointRadius: 0 },
+          { data: worst, borderColor: '#dc2626', borderDash: [3, 3], borderWidth: 1, fill: false, pointRadius: 0 },
+          { data: best, borderColor: '#059669', borderDash: [3, 3], borderWidth: 1, fill: false, pointRadius: 0 },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        scales: { x: { display: false }, y: { display: false, min: 0, max: 100 } },
+        elements: { line: { borderJoinStyle: 'round' } }
+      }
+    });
+  });
+})();
+
+// --- Heatmap ---
+(function buildHeatmap() {
+  const t = DATA.peers.heatmap_taxonomy;
+  const head = '<tr><th style="text-align:left;">Entity</th>' +
+               t.columns.map(c => '<th class="vert">' + c + '</th>').join('') +
+               '<th>Total events</th></tr>';
+  const body = t.rows.map(row => {
+    const cells = row.pct.map((p, i) => {
+      const alpha = Math.min(1, p / 60);
+      const bg = 'rgba(209,49,91,' + alpha.toFixed(2) + ')';
+      const col = p > 25 ? '#fff' : 'var(--text)';
+      const tooltip = row.name + ' / ' + t.columns[i] + ': ' + row.raw[i] + ' events (' + p + '% of ' + row.total + ' total)';
+      return '<td style="background:' + bg + '; color:' + col + ';" title="' + tooltip + '">' + (p > 0 ? p.toFixed(1) : '') + '</td>';
+    }).join('');
+    const focalPill = row.highlight ? '<span class="focal-pill">FOCAL</span>' : '';
+    return '<tr class="' + (row.highlight ? 'focal' : '') + '"><td class="name">' + row.name + focalPill + '</td>' + cells + '<td class="total">' + row.total.toLocaleString() + '</td></tr>';
+  }).join('');
+  document.getElementById('heatmap-table').innerHTML = head + body;
+})();
+
+// --- Risk Driver Status Table (shows ALL 12 drivers) ---
+(function buildDriverTable() {
+  const tbody = document.getElementById('driver-tbody');
+  const posturePriority = { 'DISCUSS NOW': 0, 'MONITOR': 1, 'OPPORTUNITY': 2, 'HOLD': 3 };
+  const sorted = [...DATA.themes].sort((a,b) => {
+    // zero-event drivers always last
+    const az = a.no_data ? 1 : 0;
+    const bz = b.no_data ? 1 : 0;
+    if (az !== bz) return az - bz;
+    const pp = (posturePriority[a.posture] || 9) - (posturePriority[b.posture] || 9);
+    if (pp !== 0) return pp;
+    return b.current_ri - a.current_ri;
+  });
+  tbody.innerHTML = sorted.map(t => {
+    const chCls = t.change_3m > 2 ? 'ch-red' : t.change_3m < -2 ? 'ch-green' : '';
+    const monthsWin = DATA.overall.months.length;
+    const avgMo = (t.total_events / monthsWin).toFixed(1);
+    const nameMeta = t.no_data
+      ? pill('thin', 'no events')
+      : (t.thin_sample ? pill('thin', 'thin') : '');
+    if (t.no_data) {
+      return '<tr style="opacity: 0.55;">' +
+        '<td><strong>' + t.name + '</strong> ' + nameMeta + '</td>' +
+        '<td class="num">,</td>' +
+        '<td class="num">,</td>' +
+        '<td class="num">0.0</td>' +
+        '<td class="num">,</td>' +
+        '<td>' + pill('GREEN', 'GREEN') + '</td>' +
+        '<td>' + pill('dir', 'Stable') + '</td>' +
+        '<td>' + pill(postureClass('HOLD'), 'HOLD') + '</td>' +
+      '</tr>';
+    }
+    return '<tr>' +
+      '<td><strong>' + t.name + '</strong> ' + nameMeta + '</td>' +
+      '<td class="num">' + t.current_ri.toFixed(1) + '</td>' +
+      '<td class="num ' + chCls + '">' + (t.change_3m >= 0 ? '+' : '') + t.change_3m.toFixed(1) + '</td>' +
+      '<td class="num">' + avgMo + '</td>' +
+      '<td class="num">' + t.pct_concerning.toFixed(1) + '%</td>' +
+      '<td>' + pill(t.rag, t.rag) + '</td>' +
+      '<td>' + pill('dir', t.direction) + '</td>' +
+      '<td>' + pill(postureClass(t.posture), t.posture) + '</td>' +
+    '</tr>';
+  }).join('');
+})();
+
+// --- Driver Deep Dive (all 12 drivers in dropdown) ---
+let ddChartInstance = null;
+(function buildDeepDive() {
+  const select = document.getElementById('driver-select');
+  const sorted = [...DATA.themes].sort((a,b) => {
+    const az = a.no_data ? 1 : 0;
+    const bz = b.no_data ? 1 : 0;
+    if (az !== bz) return az - bz;
+    return b.current_ri - a.current_ri;
+  });
+  select.innerHTML = sorted.map(t => {
+    const tag = t.no_data ? ' (no events)' : ' (RI ' + t.current_ri.toFixed(1) + ', ' + t.total_events + ' events)';
+    return '<option value="' + t.name + '">' + t.name + tag + '</option>';
+  }).join('');
+  select.value = sorted[0].name;
+  function renderDD(name) {
+    const t = DATA.themes.find(x => x.name === name);
+    // Meta pills
+    const meta = document.getElementById('dd-meta');
+    const thinPill = t.thin_sample ? pill('thin', 'thin sample') : '';
+    meta.innerHTML = pill(t.rag, t.rag) + pill('dir', t.direction) + pill(postureClass(t.posture), t.posture) +
+      '<span class="tag">' + t.total_events + ' events</span>' +
+      '<span class="tag">Severity ' + t.current_severity.toFixed(1) + '</span>' +
+      '<span class="tag">Concerning ' + t.pct_concerning.toFixed(1) + '%</span>' + thinPill;
+
+    // Chart
+    if (ddChartInstance) { ddChartInstance.destroy(); }
+    const ctx = document.getElementById('ddChart').getContext('2d');
+    const allMonths = t.history.months.concat(DATA.forecast_months);
+    const histLen = t.history.months.length;
+    const hist = t.history.risk_index.concat(Array(DATA.forecast_months.length).fill(null));
+    const bridge = t.history.risk_index[histLen - 1];
+    const base = Array(histLen - 1).fill(null).concat([bridge]).concat(t.forecast.base);
+    const worst = Array(histLen - 1).fill(null).concat([bridge]).concat(t.forecast.worst);
+    const best = Array(histLen - 1).fill(null).concat([bridge]).concat(t.forecast.best);
+    ddChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: allMonths,
+        datasets: [
+          { label: 'History', data: hist, borderColor: '#d1315b', backgroundColor: 'rgba(209,49,91,0.14)', borderWidth: 2, fill: true, pointRadius: 2, tension: 0.25 },
+          { label: 'Base', data: base, borderColor: '#d1315b', borderDash: [5, 3], borderWidth: 1.5, fill: false, pointRadius: 0 },
+          { label: 'Worst', data: worst, borderColor: '#dc2626', borderDash: [3, 3], borderWidth: 1.25, fill: false, pointRadius: 0 },
+          { label: 'Best', data: best, borderColor: '#059669', borderDash: [3, 3], borderWidth: 1.25, fill: false, pointRadius: 0 },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } },
+        scales: { y: { min: 0, max: 100 } }
+      }
+    });
+    // Headlines
+    const hd = document.getElementById('dd-headlines');
+    if (t.headlines && t.headlines.length > 0) {
+      hd.innerHTML = t.headlines.slice(0, 6).map(h =>
+        '<div class="hd">' + h.title + '<div class="meta">' + (h.source || 'Polecat') + ' / ' + h.date + '</div></div>'
+      ).join('');
+    } else {
+      hd.innerHTML = '<div class="hd" style="font-style: italic; color: var(--muted);">No representative events captured for this driver.</div>';
+    }
+  }
+  select.addEventListener('change', e => renderDD(e.target.value));
+  renderDD(sorted[0].name);
+})();
+
+// --- Scatter ---
+(function buildScatter() {
+  const ctx = document.getElementById('scatterChart').getContext('2d');
+
+  // LOCAL plugins (not Chart.register)
+  const quadrantBands = {
+    id: 'quadrantBands',
+    beforeDraw(chart) {
+      if (!chart || !chart.chartArea || !chart.scales || !chart.scales.y) return;
+      const { chartArea, scales: { y } } = chart;
+      const c = chart.ctx;
+      const y50 = y.getPixelForValue(50);
+      c.save();
+      c.fillStyle = 'rgba(220,38,38,0.04)';
+      c.fillRect(chartArea.left, chartArea.top, chartArea.right - chartArea.left, y50 - chartArea.top);
+      c.fillStyle = 'rgba(5,150,105,0.03)';
+      c.fillRect(chartArea.left, y50, chartArea.right - chartArea.left, chartArea.bottom - y50);
+      c.fillStyle = '#9ca3af';
+      c.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      c.textAlign = 'right';
+      c.fillText('RI 50 (elevated)', chartArea.right - 8, y50 - 6);
+      c.restore();
+    }
+  };
+
+  const arrowsPlug = {
+    id: 'scatterArrows',
+    afterDraw(chart) {
+      if (!chart || !chart.ctx || !chart.scales || !chart.scales.x || !chart.scales.y) return;
+      const c = chart.ctx;
+      const meta = chart.getDatasetMeta(0);
+      if (!meta || !meta.data || meta.data.length === 0) return;
+      const dataArr = chart.data && chart.data.datasets && chart.data.datasets[0] && chart.data.datasets[0].data;
+      if (!dataArr) return;
+      DATA.scatter.forEach(pt => {
+        const idx = dataArr.findIndex(d => d && d.label === pt.name);
+        if (idx < 0) return;
+        const el = meta.data[idx];
+        if (!el) return;
+        const cx = el.x, cy = el.y;
+        if (cx == null || cy == null) return;
+        const tx = chart.scales.x.getPixelForValue(pt.projected.x);
+        const ty = chart.scales.y.getPixelForValue(pt.projected.y);
+        const dx = tx - cx, dy = ty - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 3) return;
+        const r = (el.options && el.options.radius) || 7;
+        const sx = cx + (dx / dist) * r;
+        const sy = cy + (dy / dist) * r;
+        const colour = pt.projected.y > pt.current.y + 0.5 ? '#dc2626'
+                     : pt.projected.y < pt.current.y - 0.5 ? '#059669' : '#9ca3af';
+        c.save();
+        c.strokeStyle = colour; c.fillStyle = colour; c.lineWidth = 1.5;
+        c.beginPath(); c.moveTo(sx, sy); c.lineTo(tx, ty); c.stroke();
+        const angle = Math.atan2(ty - sy, tx - sx);
+        const hs = 9;
+        c.beginPath();
+        c.moveTo(tx, ty);
+        c.lineTo(tx - hs * Math.cos(angle - 0.4), ty - hs * Math.sin(angle - 0.4));
+        c.lineTo(tx - hs * Math.cos(angle + 0.4), ty - hs * Math.sin(angle + 0.4));
+        c.closePath(); c.fill();
+        c.restore();
+      });
+
+      // Labels with collision avoidance
+      const placed = [];
+      const ctx2 = chart.ctx;
+      ctx2.save();
+      ctx2.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      DATA.scatter.forEach((pt, i) => {
+        const idx = dataArr.findIndex(d => d && d.label === pt.name);
+        if (idx < 0) return;
+        const el = meta.data[idx];
+        if (!el) return;
+        let lx = el.x, ly = el.y - 15;
+        const w = ctx2.measureText(pt.name).width + 10;
+        for (let k = 0; k < 6; k++) {
+          const hit = placed.find(p => Math.abs(p.x - lx) < 70 && Math.abs(p.y - ly) < 16);
+          if (!hit) break;
+          ly -= 15;
+        }
+        placed.push({ x: lx, y: ly, w: w });
+        // Draw pill background
+        ctx2.fillStyle = 'rgba(255,255,255,0.85)';
+        ctx2.strokeStyle = 'rgba(209,49,91,0.35)';
+        ctx2.lineWidth = 0.75;
+        const bx = lx - w/2, by = ly - 10;
+        ctx2.beginPath();
+        if (ctx2.roundRect) ctx2.roundRect(bx, by, w, 14, 7);
+        else ctx2.rect(bx, by, w, 14);
+        ctx2.fill();
+        ctx2.stroke();
+        ctx2.fillStyle = '#2a3b6e';
+        ctx2.textAlign = 'center';
+        ctx2.fillText(pt.name, lx, ly);
+      });
+      ctx2.restore();
+    }
+  };
+
+  const ragColor = (rag) => rag === 'RED' ? 'rgba(220,38,38,0.5)'
+                            : rag === 'AMBER' ? 'rgba(217,119,6,0.5)'
+                            : 'rgba(5,150,105,0.5)';
+  const ragBorder = (rag) => rag === 'RED' ? '#dc2626'
+                             : rag === 'AMBER' ? '#d97706' : '#059669';
+
+  const bubbleData = DATA.scatter.map(pt => ({
+    x: pt.current.x,
+    y: pt.current.y,
+    r: Math.max(7, Math.min(22, 4 + pt.current.severity * 0.25)),
+    label: pt.name,
+  }));
+
+  new Chart(ctx, {
+    type: 'bubble',
+    data: {
+      datasets: [{
+        label: 'Drivers',
+        data: bubbleData,
+        backgroundColor: DATA.scatter.map(pt => ragColor(pt.rag)),
+        borderColor: DATA.scatter.map(pt => ragBorder(pt.rag)),
+        borderWidth: 1.5,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: (items) => items[0].raw.label,
+            label: (item) => {
+              const pt = DATA.scatter.find(p => p.name === item.raw.label);
+              const delta = (pt.projected.y - pt.current.y).toFixed(1);
+              const sign = pt.projected.y - pt.current.y >= 0 ? '+' : '';
+              return [
+                'Avg events/mo: ' + pt.current.x,
+                'Current RI: ' + pt.current.y.toFixed(1),
+                'Projected RI: ' + pt.projected.y.toFixed(1) + ' (' + sign + delta + ')',
+                'Severity: ' + pt.current.severity.toFixed(1),
+                pt.rag + ' | ' + pt.posture,
+              ];
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'logarithmic', title: { display: true, text: 'Average monthly event frequency (log scale)' },
+          min: 0.1,
+        },
+        y: { title: { display: true, text: 'Risk Index' }, min: 0, max: 100 }
+      }
+    },
+    plugins: [quadrantBands, arrowsPlug]
+  });
+})();
+
+// --- Projection Chart (top 3 drivers) ---
+(function buildProjection() {
+  const ctx = document.getElementById('projChart').getContext('2d');
+  const top3 = [...DATA.themes].sort((a,b) => b.current_ri - a.current_ri).slice(0, 3);
+  const colors = ['#dc2626', '#d97706', '#d1315b'];
+  const allMonths = DATA.overall.months.concat(DATA.forecast_months);
+  const histLen = DATA.overall.months.length;
+  const datasets = top3.map((t, i) => {
+    const hist = t.history.risk_index;
+    const bridge = hist[histLen - 1];
+    const full = hist.concat(t.forecast.base);
+    return {
+      label: t.name,
+      data: full,
+      borderColor: colors[i],
+      backgroundColor: colors[i] + '22',
+      borderWidth: 2,
+      fill: false,
+      pointRadius: 1.5,
+      tension: 0.25,
+      segment: {
+        borderDash: ctx => ctx.p0DataIndex >= histLen - 1 ? [5, 4] : undefined,
+      }
+    };
+  });
+  new Chart(ctx, {
+    type: 'line',
+    data: { labels: allMonths, datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 14, font: { size: 11 } } } },
+      scales: { y: { min: 0, max: 100, title: { display: true, text: 'Risk Index' } } }
+    }
+  });
+})();
+
+// --- Accordions (all 12 drivers) ---
+(function buildAccordions() {
+  const container = document.getElementById('accordions');
+  const sorted = [...DATA.themes].sort((a,b) => {
+    const az = a.no_data ? 1 : 0;
+    const bz = b.no_data ? 1 : 0;
+    if (az !== bz) return az - bz;
+    return b.current_ri - a.current_ri;
+  });
+  container.innerHTML = sorted.map((t, i) => {
+    const openCls = i === 0 ? 'open' : '';
+    const body = t.headlines && t.headlines.length > 0
+      ? t.headlines.slice(0, 6).map(h => '<div class="hd">' + h.title + ' <span class="meta">, ' + h.date + '</span></div>').join('')
+      : '<div class="hd" style="font-style:italic; color:var(--muted);">No events classified to this driver in the current window.</div>';
+    const riTag = t.no_data ? '' : '<span class="tag">RI ' + t.current_ri.toFixed(1) + '</span>';
+    return '<div class="acc ' + openCls + '" data-acc>' +
+      '<div class="acc-head">' +
+        '<span class="name">' + t.name + '</span>' +
+        pill(t.rag, t.rag) + pill('dir', t.direction) +
+        riTag +
+        '<span class="tag">' + t.total_events + ' events</span>' +
+        '<span class="arrow">&#9654;</span>' +
+      '</div>' +
+      '<div class="acc-body">' + body + '</div>' +
+      '</div>';
+  }).join('');
+  container.querySelectorAll('[data-acc] .acc-head').forEach(head => {
+    head.addEventListener('click', () => {
+      head.parentElement.classList.toggle('open');
+    });
+  });
+})();
+
+// --- Value-add section (generic; driven entirely by DATA.value_add) ---
+// Schema:
+//   DATA.value_add = {
+//     title: "GLP-1 / STRATEGIC READ",
+//     context: "Paragraph of narrative...",
+//     chart: {
+//       title: "GLP-1 topic event volume",
+//       caption: "Event volume from the PolecatX topic entity...",
+//       months: [...], values: [int, ...], series_label: "GLP-1 market events"
+//     },
+//     theme_counts: { "Theme": count, ... },
+//     sample_groups: [
+//       { title: "Consumer food impact events", samples: [{title, date}, ...], empty: "No events captured." },
+//       ...
+//     ]
+//   };
+// Omit DATA.value_add entirely to suppress the section.
+(function buildValueAdd() {
+  const v = DATA.value_add;
+  const section = document.getElementById('value-add-section');
+  if (!v || !section) return;
+  section.style.display = '';
+
+  document.getElementById('value-add-title').textContent = v.title || 'STRATEGIC READ';
+  document.getElementById('value-add-context').textContent = v.context || '';
+
+  const chart = v.chart || {};
+  document.getElementById('value-add-chart-title').textContent = chart.title || '';
+  document.getElementById('value-add-chart-caption').textContent = chart.caption || '';
+
+  if (chart.months && chart.values) {
+    new Chart(document.getElementById('valueAddChart').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: chart.months,
+        datasets: [{
+          label: chart.series_label || 'Events',
+          data: chart.values,
+          backgroundColor: 'rgba(209,49,91,0.55)',
+          borderColor: '#d1315b',
+          borderWidth: 1,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { title: { display: true, text: 'Event count' }, beginAtZero: true } }
+      }
+    });
+  }
+
+  const themeList = document.getElementById('value-add-themes');
+  const themeEntries = Object.entries(v.theme_counts || {}).sort((a,b) => b[1] - a[1]);
+  if (themeEntries.length) {
+    const maxTheme = Math.max(...themeEntries.map(e => e[1]));
+    themeList.innerHTML = themeEntries.map(([name, count]) => {
+      const pctWidth = Math.round(count / maxTheme * 100);
+      return '<div class="theme-item">' +
+        '<div><span class="name">' + name + '</span><span class="count">' + count + '</span></div>' +
+        '<div class="bar"><div class="bar-fill" style="width: ' + pctWidth + '%"></div></div>' +
+        '</div>';
+    }).join('');
+  } else {
+    themeList.innerHTML = '';
+  }
+
+  function samplesHtml(list, emptyMsg) {
+    if (!list || list.length === 0) return '<div class="glp1-sample" style="font-style:italic; color: var(--muted);">' + (emptyMsg || 'No events captured.') + '</div>';
+    return list.slice(0, 4).map(s =>
+      '<div class="glp1-sample">' + s.title + ' <span style="color:var(--muted);">(' + s.date + ')</span></div>'
+    ).join('');
+  }
+  const samplesContainer = document.getElementById('value-add-samples');
+  samplesContainer.innerHTML = (v.sample_groups || []).map(g => {
+    return '<h4>' + (g.title || '') + '</h4>' + samplesHtml(g.samples, g.empty);
+  }).join('');
+})();
+
+// --- Footer ---
+document.getElementById('footer').textContent =
+  'Polecat API. Risk Index = Frequency (40%) + Severity (35%) + Momentum (25%). 3-month ensemble forecast (linear + EWMA + weighted recent). Generated ' + DATA.generated + '.';
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var BRAND = '#C8102E';
+    var BRAND_SOFT = 'rgba(200,16,46,0.12)';
+    var BRAND_RGB = '200,16,46';
+
+    function riLevel(ri) { return ri >= 55 ? 'High' : ri >= 35 ? 'Medium' : 'Low'; }
+    function riDir(delta) {
+        if (delta > 10) return 'Rapidly Increasing';
+        if (delta > 4) return 'Increasing';
+        if (delta < -10) return 'Rapidly Decreasing';
+        if (delta < -4) return 'Decreasing';
+        return 'Stable';
+    }
+    function dirFontSize(dir) {
+        var l = dir.length;
+        if (l <= 6) return '26px'; if (l <= 10) return '20px'; if (l <= 12) return '17px';
+        return '13px';
+    }
+
+    setTimeout(function() {
+        // Stats row H/M/L
+        var stats = document.querySelectorAll('#stats-row .stat');
+        var DATA = window.DATA;
+        if (DATA && stats.length) {
+            var curRI = DATA.overall.risk_index[DATA.overall.risk_index.length - 1];
+            var fcEnd = DATA.overall.forecast.base[DATA.overall.forecast.base.length - 1];
+            if (stats[0]) { var v = stats[0].querySelector('.val'); if (v) v.textContent = riLevel(curRI); }
+            if (stats[1]) {
+                var lbl = stats[1].querySelector('.label');
+                var val = stats[1].querySelector('.val');
+                if (lbl) lbl.textContent = '3 Month Forecast';
+                if (val) { var dir = riDir(fcEnd - curRI); val.textContent = dir; val.style.fontSize = dirFontSize(dir); }
+            }
+        }
+
+        // Heatmap H/M/L
+        function pctLevel(p) { return p >= 65 ? 'High' : p >= 35 ? 'Medium' : 'Low'; }
+        var tbl = document.getElementById('heatmap-table');
+        if (tbl) {
+            tbl.querySelectorAll('tr').forEach(function(row, ri) {
+                if (ri === 0) return;
+                var cells = row.querySelectorAll('td');
+                cells.forEach(function(cell, ci) {
+                    if (ci === 0 || ci === cells.length - 1) return;
+                    var pct = parseFloat(cell.textContent) || 0;
+                    if (pct > 0) {
+                        cell.textContent = pctLevel(pct);
+                        var alpha = Math.min(0.8, pct / 100);
+                        cell.style.background = 'rgba(' + BRAND_RGB + ',' + alpha.toFixed(2) + ')';
+                        cell.style.color = pct >= 50 ? '#fff' : 'var(--text)';
+                        cell.style.fontSize = '11px'; cell.style.fontWeight = '600';
+                    }
+                });
+            });
+        }
+
+        // Recolour pillar sparklines
+        if (window.Chart && DATA && DATA.pillars) {
+            DATA.pillars.forEach(function(p, i) {
+                var c = document.getElementById('pillar-spark-' + i);
+                if (!c) return;
+                var ch = Chart.getChart(c); if (!ch) return;
+                if (ch.data.datasets[0]) { ch.data.datasets[0].borderColor = BRAND; ch.data.datasets[0].backgroundColor = BRAND_SOFT; }
+                if (ch.data.datasets[1]) ch.data.datasets[1].borderColor = BRAND;
+                ch.update();
+            });
+        }
+    }, 300);
+});
+</script>
+
+<script>
+// Remove zero-event drivers from status table and accordions
+document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() {
+        // Remove from driver table
+        var tbody = document.getElementById('driver-tbody');
+        if (tbody) {
+            Array.from(tbody.querySelectorAll('tr')).forEach(function(row) {
+                var eventsCell = row.querySelector('td:nth-child(4)');
+                if (eventsCell) {
+                    var evtText = eventsCell.textContent.trim();
+                    // "0.0" events per quarter = 0 total events
+                    if (evtText === '0.0' || evtText === '-') {
+                        // Check if it's a no-data row with 0 events
+                        var nameCell = row.querySelector('td:first-child strong');
+                        if (nameCell) row.remove();
+                    }
+                }
+            });
+        }
+        // Remove from accordions
+        var container = document.getElementById('accordions');
+        if (container) {
+            Array.from(container.querySelectorAll('[data-acc]')).forEach(function(acc) {
+                var nameEl = acc.querySelector('.name');
+                if (!nameEl) return;
+                var DATA = window.DATA;
+                if (!DATA) return;
+                var t = DATA.themes.find(function(x) { return x.name === nameEl.textContent.trim(); });
+                if (t && t.total_events === 0) acc.remove();
+            });
+        }
+    }, 400);
+});
+</script>
+</body>
+</html>
